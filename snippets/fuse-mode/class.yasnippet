@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: uxClass
+# key: class
+# --
+<${1:Panel} ux:Class="${2:ClassName}">
+  <${3:Element} ux:Dependency="${4:param}" />
+  <JavaScript File="${2:ClassName}.js" />
+
+  <${5:DockPanel}>
+    ${0:<!-- code -->}
+  </${5:DockPanel}>
+</${1:Panel}>

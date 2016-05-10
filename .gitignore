@@ -1,0 +1,11 @@
+elpa/
+includes/
+*~
+*.dat
+\#*\#
+
+games/
+url/
+
+projectile-bookmarks.eld
+.projectile-bookmarks.eld

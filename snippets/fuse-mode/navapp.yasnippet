@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: uxNavApp
+# key: navapp
+# --
+<Router ux:Name="router" />
+
+<Navigator DefaultTemplate="${3:default}">
+  <${1:Element} ux:Template="${2:template}" router="router" />
+  <${4:Element} ux:Template="${5:template}" router="router" />
+</Navigator>
