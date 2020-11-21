@@ -2,7 +2,8 @@
 
 **My .emacs.d - use it, break it, fix it, trash it**
 
-This emacs configuration is tested in emacs 25.1 on macOS. Some of the configurations aren't compatible with Windows, yet.
+This emacs configuration is tested in emacs 27.1 on macOS.
+
 
 ## Usage
 
@@ -12,41 +13,42 @@ Clone this into your home folder as `.emacs.d`. Rember to backup your old `.emac
 git clone https://github.com/tmn/.emacs.d.git ~/.emacs.d
 ```
 
+
 ## Install Emacs
 
+Whatever port of emacs would do. I prefer the pure one using cask:
+
 ```
-brew tap d12frosted/emacs-plus
-brew install emacs-plus          # Install the latest release (currently Emacs 27)
+brew install --cask emacs
 ```
 
-## OS dependencies
 
-Install system dependencies for some of the emacs packages.
+## Dependencies
 
-### macOS
+This emacs configuration depends on a few packages installed outside of emacs.
+
+### OS Dependencies
+
+Install system dependencies for some of the emacs packages:
+
+* ripgrep
+* ctags
+* node
+
+I.e. using brew:
 
 ```bash
-brew install the_silver_searcher
+brew install ripgrep ctags node
 ```
 
-### Linux (apt)
-
-```bash
-apt-get install silversearcher-ag
-```
-
-## Other dependencies
+### Other dependencies
 
 The language configurations depends on some outside packages. These are installed outside of emacs.
 
-### Swift
 
-Download and install latest snapshot of Swift toolchain from [swift.org](https://swift.org/download/#snapshots).
-
-### Packages through npm
+#### Packages through npm
 
 * typescript-language-server
-* javascript-typescript-langserver
 * typescript
 * eslint
 * babel
@@ -54,8 +56,20 @@ Download and install latest snapshot of Swift toolchain from [swift.org](https:/
 * elm-format
 
 ```bash
-npm install -g eslint babel babel-eslint typescript-language-server javascript-typescript-langserver typescript elm-format
+npm install -g eslint babel babel-eslint typescript typescript-language-server elm-format
 ```
+
+
+#### Swift
+
+This configuration uses `sourcekit-lsp` for Swift. The `sourcekit-lsp` is bundled with Xcode 11.4 and later. Download latest Xcode from the Mac App Store or from the Apple Developer Portal. Or simply do a `xcode-select --install` in your terminal.
+
+
+#### Java
+
+The Java setup depends on `lombok.jar`. It may be downloaded form [projectlombok.org/download](https://projectlombok.org/download).
+
+Place the file inside `~/.emacs/lib/`.
 
 
 Cheers!

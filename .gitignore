@@ -1,4 +1,5 @@
 elpa/
+straight/
 includes/
 *~
 *.dat
@@ -9,3 +10,19 @@ url/
 
 projectile-bookmarks.eld
 .projectile-bookmarks.eld
+
+.DS_Store
+.cache/
+.dap-breakpoints
+.extension/
+.lsp-java/
+.lsp-eslint-choices
+.lsp-session-v1
+
+eclipse.jdt.ls/
+lib/
+recentf
+
+transient/history.el
+
+*.sqlite
