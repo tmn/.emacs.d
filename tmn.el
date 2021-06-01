@@ -571,7 +571,7 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 
 ;; Package org-mode
 (use-package org
-  :straight org-plus-contrib
+  :straight (org-plus-contrib :type git :repo "https://git.sr.ht/~bzg/org-contrib")
   :bind (:map org-mode-map
               ;; Prevent Org from overriding the bindings for
               ;; windmove. By default, these keys are mapped to
