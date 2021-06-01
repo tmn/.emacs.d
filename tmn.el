@@ -251,7 +251,9 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
                            "[/\\\\].DS_Store")
                          )
       (push directories lsp-file-watch-ignored)))
-  :hook ((java-mode . lsp)
+  :hook ((c-mode . lsp)
+         (c++-mode . lsp)
+         (java-mode . lsp)
          (js-mode . lsp)
          (rjsx-mode . lsp)
          (js2-mode . lsp)
@@ -311,7 +313,10 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
                   display-buffer-in-side-window)
                  (side            . bottom)
                  (reusable-frames . visible)
-                 (window-height   . 0.15))))
+                 (window-height   . 0.15)))
+  :config
+  (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++11"
+                                            flycheck-clang-language-standard "c++11"))))
 
 (use-package which-key
   :demand t
