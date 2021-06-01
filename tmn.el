@@ -205,7 +205,7 @@
         projectile-cache-file (locate-user-emacs-file ".cache/projectile.cache")
         projectile-known-projects-file (locate-user-emacs-file ".cache/projectile.projects")
         projectile-enable-caching t
-        projectile-indexing-method 'alien)
+        projectile-indexing-method 'native)
 
   :config
   (setq projectile-globally-ignored-directories (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules"  "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
