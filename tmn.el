@@ -267,10 +267,16 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 
 (use-package dap-mode
   :config
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
   (progn
-    (dap-auto-configure-mode)
+    (dap-auto-configure-mode t)
     (dap-mode t)
-    (dap-ui-mode t)))
+    (dap-ui-mode t)
+    (dap-tooltip-mode t)
+    (tooltip-mode t)
+    (dap-ui-controls-mode t))
+  (require 'dap-lldb)
+  (require 'dap-cpptools))
 
 (use-package company-lsp
   :straight (company-lsp :type git :host github :repo "tigersoldier/company-lsp")
@@ -363,6 +369,7 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 
 (use-package all-the-icons-ivy-rich
   :after ivy-rich
+  :straight t
   :hook (ivy-mode . all-the-icons-ivy-rich-mode)
   :init (all-the-icons-ivy-rich-mode 1))
 
@@ -626,6 +633,23 @@ This runs `org-insert-heading' with
 ;; Package `yaml`
 (use-package yaml-mode)
 
+(use-package cmake-mode)
+
+(use-package winum
+  :init
+  (winum-mode)
+  :bind (("C-x w `" . winum-select-window-by-number)
+         ("M-0" . winum-select-window-0-or-10)
+         ("M-1" . winum-select-window-1)
+         ("M-2" . winum-select-window-2)
+         ("M-3" . winum-select-window-3)
+         ("M-4" . winum-select-window-4)
+         ("M-5" . winum-select-window-5)
+         ("M-6" . winum-select-window-6)
+         ("M-7" . winum-select-window-7)
+         ("M-8" . winum-select-window-8)
+         ("M-9" . winum-select-window-9)))
+
 (use-package treemacs
   :init
   (with-eval-after-load 'winum
@@ -664,5 +688,20 @@ This runs `org-insert-heading' with
   :config
   (progn
     (lsp-treemacs-sync-mode 1)))
+
+
+;; For groovy and gradle files
+(use-package groovy-mode
+  :mode "\\.\\(gradle\\|groovy\\)$")
+
+;; Provides syntax highlighting and indentation for CMakeLists.txt and *.cmake source files.
+(use-package cmake-mode)
+
+(use-package web-mode
+  :mode "\\.html"
+  :config
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t))
+
 
 ;;; tmn.el ends here
