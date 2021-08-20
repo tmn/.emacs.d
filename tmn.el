@@ -122,29 +122,6 @@
 ;; Bootstrap configs
 ;; -----------------------------------------------------------------------------
 
-;; Using doom-themes and doom-modeline for the look-and-feel of tmn.el
-(use-package doom-themes
-  :init (load-theme 'doom-vibrant t)
-  :config
-  (progn
-    (setq doom-themes-enable-bold t
-          doom-themes-enable-italic t)
-    (doom-themes-visual-bell-config)))
-
-(use-package doom-modeline
-  :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-height 30
-        doom-modeline-lsp t
-        doom-modeline-icon t
-        doom-modeline-major-mode-icon t
-        doom-modeline-major-mode-color-icon t
-        doom-modeline-buffer-file-name-style 'auto
-        doom-modeline-minor-modes nil
-        doom-modeline-buffer-encoding t
-        doom-modeline-indent-info nil
-        doom-modeline-env-version t))
-
 ;; String helpers
 (use-package s)
 
