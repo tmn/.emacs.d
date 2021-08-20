@@ -366,26 +366,6 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   :hook (ivy-mode . all-the-icons-ivy-rich-mode)
   :init (all-the-icons-ivy-rich-mode 1))
 
-(use-package neotree
-  :commands (neotree-toggle
-             neotree-show
-             neotree-hide
-             neotree-find)
-  :bind (("C-c o p" . neotree-toggle)
-         ("C-c o P" . neotree-find)
-         ("C-c o D" . neotree-dir))
-  :init
-  (setq neo-window-width 35
-        neo-smart-open nil
-        neo-window-fixed-size nil
-        neo-create-file-auto-open t
-        neo-show-updir-line nil
-        neo-dont-be-alone t
-        neo-show-hidden-files t
-        neo-auto-indent-point t)
-  (when tmn/is-mac
-    (setq neo-theme 'icons)))
-
 (use-package editorconfig
   :init (editorconfig-mode 1))
 
@@ -645,5 +625,44 @@ This runs `org-insert-heading' with
 
 ;; Package `yaml`
 (use-package yaml-mode)
+
+(use-package treemacs
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :bind (("M-0"       . treemacs-select-window)
+         ("C-x t 1"   . treemacs-delete-other-windows)
+         ("C-c t t"   . treemacs)
+         ("C-c t B"   . treemacs-bookmarks)
+         ("C-c t C-t" . treemacs-find-file)
+         ("C-c t M-t" . treemacs-find-tag))
+  :config
+  (progn
+    (setq
+     ; treemacs-project-follow-cleanup t
+     treemacs-project-follow-mode t)
+    (treemacs-resize-icons 16)
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)))
+
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+(use-package treemacs-icons-dired
+  :after (treemacs dired)
+  :config
+  (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after (treemacs magit))
+
+(use-package lsp-treemacs
+  :after (treemacs lsp-mode)
+  :bind (("M-p t e" . lsp-treemacs-errors-list)
+         ("M-p t r" . lsp-treemacs-references)
+         ("M-p t s" . lsp-treemacs-symbols))
+  :config
+  (progn
+    (lsp-treemacs-sync-mode 1)))
 
 ;;; tmn.el ends here
