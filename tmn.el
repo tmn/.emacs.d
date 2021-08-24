@@ -6,6 +6,7 @@
 ;;; Code:
 
 (defconst tmn/is-mac (eq system-type 'darwin))
+(defconst tmn/is-linux (eq system-type 'gnu/linux))
 (defconst tmn/is-windows (eq system-type 'windows-nt))
 
 (when tmn/is-mac
@@ -35,6 +36,10 @@
 (when tmn/is-windows
   (require 'ls-lisp)
   (setq ls-lisp-use-insert-directory-program nil))
+
+(when tmn/is-linux
+   (menu-bar-mode -1)
+   (tool-bar-mode -1))
 
 
 ;; -----------------------------------------------------------------------------
