@@ -702,6 +702,12 @@ This runs `org-insert-heading' with
 ;; Provides syntax highlighting and indentation for CMakeLists.txt and *.cmake source files.
 (use-package cmake-mode)
 
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))
+
 (use-package web-mode
   :mode "\\.html"
   :config
