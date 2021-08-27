@@ -709,10 +709,13 @@ This runs `org-insert-heading' with
                           (lsp))))
 
 (use-package web-mode
-  :mode "\\.html"
+  :mode "\\.html$"
   :config
   (setq web-mode-enable-auto-closing t)
   (setq web-mode-enable-auto-pairing t))
+
+(use-package qml-mode
+  :mode "\\.qml$")
 
 
 ;;; tmn.el ends here
