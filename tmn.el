@@ -201,7 +201,7 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   :init
   (setq
    company-minimum-prefix-length 1
-   company-idle-delay 0.15
+   company-idle-delay 0.25
    company-tooltip-align-annotations t
    company-tooltip-flip-when-above t
    company-show-numbers t
