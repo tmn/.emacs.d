@@ -38,8 +38,8 @@
   (setq ls-lisp-use-insert-directory-program nil))
 
 (when tmn/is-linux
-   (menu-bar-mode -1)
-   (tool-bar-mode -1))
+  (menu-bar-mode -1)
+  (tool-bar-mode -1))
 
 
 ;; -----------------------------------------------------------------------------
@@ -209,7 +209,7 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
    company-require-match nil))
 
 (use-package lsp-mode
-  :init (setq lsp-keymap-prefix "s-l")
+  :init (setq lsp-keymap-prefix "C-c l")
   :bind ("M-RET" . lsp-execute-code-action)
   :config
   (progn
@@ -305,6 +305,58 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   :config
   (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++11"
                                             flycheck-clang-language-standard "c++11"))))
+
+(use-package winum
+  :init
+  (winum-mode)
+  :bind (("C-x w `" . winum-select-window-by-number)
+         ("M-0" . winum-select-window-0-or-10)
+         ("M-1" . winum-select-window-1)
+         ("M-2" . winum-select-window-2)
+         ("M-3" . winum-select-window-3)
+         ("M-4" . winum-select-window-4)
+         ("M-5" . winum-select-window-5)
+         ("M-6" . winum-select-window-6)
+         ("M-7" . winum-select-window-7)
+         ("M-8" . winum-select-window-8)
+         ("M-9" . winum-select-window-9)))
+
+(use-package treemacs
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :bind (("M-0"       . treemacs-select-window)
+         ("C-x t 1"   . treemacs-delete-other-windows)
+         ("C-c t t"   . treemacs)
+         ("C-c t B"   . treemacs-bookmarks)
+         ("C-c t C-t" . treemacs-find-file)
+         ("C-c t M-t" . treemacs-find-tag))
+  :config
+  (progn
+    (setq treemacs-project-follow-mode t)
+    (treemacs-resize-icons 16)
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)))
+
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+(use-package treemacs-icons-dired
+  :after (treemacs dired)
+  :config
+  (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after (treemacs magit))
+
+(use-package lsp-treemacs
+  :after (treemacs lsp-mode)
+  :bind (("M-p t e" . lsp-treemacs-errors-list)
+         ("M-p t r" . lsp-treemacs-references)
+         ("M-p t s" . lsp-treemacs-symbols))
+  :config
+  (progn
+    (lsp-treemacs-sync-mode 1)))
 
 (use-package which-key
   :demand t
@@ -405,7 +457,7 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package yasnippet
   :init
   (yas-global-mode 1)
-  (setq yas-snippet-dirs '("~/emacs.d/snippets")))
+  (setq yas-snippet-dirs '("~/.emacs.d/snippets")))
 
 
 ;; Dart and flutter mode
@@ -494,6 +546,12 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package js2-refactor
   :after js2-mode
   :hook (js2-mode . js2-refactor-mode))
+
+(use-package web-mode
+  :mode "\\.html$"
+  :config
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-pairing t))
 
 (use-package rjsx-mode
   :mode "\\.js$"
@@ -638,94 +696,24 @@ This runs `org-insert-heading' with
          ("\\.rst$" . rst-mode)
          ("\\.rest$" . rst-mode)))
 
-;; Package `swift`
+(use-package swift-mode
+  :after lsp-mode
+  :hook (swift-mode . lsp))
+
 (use-package lsp-sourcekit
   :after lsp-mode
   :config
   (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
 
-(use-package swift-mode
-  :after lsp-mode
-  :hook (swift-mode . lsp))
-
-;; Package `yaml`
 (use-package yaml-mode)
 
 (use-package cmake-mode)
 
-(use-package winum
-  :init
-  (winum-mode)
-  :bind (("C-x w `" . winum-select-window-by-number)
-         ("M-0" . winum-select-window-0-or-10)
-         ("M-1" . winum-select-window-1)
-         ("M-2" . winum-select-window-2)
-         ("M-3" . winum-select-window-3)
-         ("M-4" . winum-select-window-4)
-         ("M-5" . winum-select-window-5)
-         ("M-6" . winum-select-window-6)
-         ("M-7" . winum-select-window-7)
-         ("M-8" . winum-select-window-8)
-         ("M-9" . winum-select-window-9)))
-
-(use-package treemacs
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :bind (("M-0"       . treemacs-select-window)
-         ("C-x t 1"   . treemacs-delete-other-windows)
-         ("C-c t t"   . treemacs)
-         ("C-c t B"   . treemacs-bookmarks)
-         ("C-c t C-t" . treemacs-find-file)
-         ("C-c t M-t" . treemacs-find-tag))
-  :config
-  (progn
-    (setq
-     ; treemacs-project-follow-cleanup t
-     treemacs-project-follow-mode t)
-    (treemacs-resize-icons 16)
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)))
-
-(use-package treemacs-projectile
-  :after (treemacs projectile))
-
-(use-package treemacs-icons-dired
-  :after (treemacs dired)
-  :config
-  (treemacs-icons-dired-mode))
-
-(use-package treemacs-magit
-  :after (treemacs magit))
-
-(use-package lsp-treemacs
-  :after (treemacs lsp-mode)
-  :bind (("M-p t e" . lsp-treemacs-errors-list)
-         ("M-p t r" . lsp-treemacs-references)
-         ("M-p t s" . lsp-treemacs-symbols))
-  :config
-  (progn
-    (lsp-treemacs-sync-mode 1)))
-
-
-;; For groovy and gradle files
 (use-package groovy-mode
   :mode "\\.\\(gradle\\|groovy\\)$")
 
-;; Provides syntax highlighting and indentation for CMakeLists.txt and *.cmake source files.
 (use-package cmake-mode)
 
-(use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))
-
-(use-package web-mode
-  :mode "\\.html$"
-  :config
-  (setq web-mode-enable-auto-closing t)
-  (setq web-mode-enable-auto-pairing t))
 (use-package bazel-mode
   :straight (bazel-mode :type git :host github :repo "bazelbuild/emacs-bazel-mode")
   :mode "\\.\\(star\\|bzl\\|bazel\\)$")
