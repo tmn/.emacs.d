@@ -568,17 +568,6 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
               (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
               (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
 
-(use-package prettier-js
-  :commands prettier-js-mode
-  :hook ((js-mode . prettier-js-mode)
-         (js2-mode . prettier-js-mode)
-         (rjsx-mode . prettier-js-mode)
-         (css-mode . prettier-js-mode))
-  :init
-  (progn
-    (setq prettier-js-args '("--jsx-bracket-same-line")
-          prettier-js-show-errors 'buffer)))
-
 (use-package tide
   :after (typescript-mode company flycheck)
   :hook ((typescript-mode . tide-setup)
