@@ -726,6 +726,9 @@ This runs `org-insert-heading' with
   :config
   (setq web-mode-enable-auto-closing t)
   (setq web-mode-enable-auto-pairing t))
+(use-package bazel-mode
+  :straight (bazel-mode :type git :host github :repo "bazelbuild/emacs-bazel-mode")
+  :mode "\\.\\(star\\|bzl\\|bazel\\)$")
 
 (use-package protobuf-mode
   :mode "\\.proto$")
