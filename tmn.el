@@ -543,6 +543,19 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package mustache-mode
   :mode "\\.mustache$")
 
+(use-package python-mode
+  :hook
+  (python-mode . flycheck-mode)
+  (python-mode . company-mode)
+  :custom
+  (python-shell-interpreter "python3"))
+
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp))))
+
 ;; Package org-mode
 (use-package org
   :straight (org-plus-contrib :type git :repo "https://git.sr.ht/~bzg/org-contrib")
