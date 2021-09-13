@@ -727,8 +727,10 @@ This runs `org-insert-heading' with
   (setq web-mode-enable-auto-closing t)
   (setq web-mode-enable-auto-pairing t))
 
+(use-package protobuf-mode
+  :mode "\\.proto$")
+
 (use-package qml-mode
   :mode "\\.qml$")
-
 
 ;;; tmn.el ends here
