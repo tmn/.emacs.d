@@ -25,6 +25,9 @@
   (define-key key-translation-map (kbd "s-a") "å")
   (define-key key-translation-map (kbd "s-'") "æ")
   (define-key key-translation-map (kbd "s-o") "ø")
+  (define-key key-translation-map (kbd "s-A") "Å")
+  (define-key key-translation-map (kbd "s-\"") "Æ")
+  (define-key key-translation-map (kbd "s-O") "Ø")
 
   (define-key (current-global-map) (kbd "s-p") nil)
   (define-key (current-global-map) (kbd "s-o") nil)
