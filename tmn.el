@@ -14,6 +14,7 @@
    ns-use-mwheel-momentum t
    ns-use-mwheel-acceleration t
    dired-use-ls-dired nil
+   native-comp-async-report-warnings-errors nil
 
    ns-function-modifier 'hyper
    mac-command-modifier 'meta
@@ -142,7 +143,7 @@
 
 (use-package doom-themes
   :init
-  (load-theme 'doom-vibrant t)
+  (load-theme 'doom-one-light t)
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -182,7 +183,7 @@
 
 (use-package projectile
   :commands (projectile-mode projectile-project-root projectile-find-file)
-  :init
+  :config
   (projectile-mode +1)
   (setq projectile-completion-system 'ivy
         projectile-require-project-root nil
@@ -192,7 +193,6 @@
         projectile-enable-caching t
         projectile-indexing-method 'native)
 
-  :config
   (setq projectile-globally-ignored-directories (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules"  "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
         projectile-globally-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
         grep-find-ignored-files (append '("*.bundle.j
@@ -201,52 +201,47 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package company
   :commands company-mode
   :hook (prog-mode . company-mode)
-  :init
-  (setq
-   company-minimum-prefix-length 1
-   company-idle-delay 0.25
-   company-tooltip-align-annotations t
-   company-tooltip-flip-when-above t
-   company-show-numbers t
-   company-selection-wrap-around t
-   company-require-match nil))
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.1)
+  (company-tooltip-align-annotations t)
+  (company-tooltip-flip-when-above t)
+  (company-show-numbers t)
+  (company-selection-wrap-around t)
+  (company-require-match nil)
+  :config
+  (global-company-mode 1))
 
 (use-package lsp-mode
+  :commands lsp
   :init (setq lsp-keymap-prefix "C-c l")
   :bind ("M-RET" . lsp-execute-code-action)
+  :custom
+  (lsp-print-io nil)
+  (lsp-auto-configure t)
+  (lsp-enable-snippet t)
+  (lsp-completion-provider :capf)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-idle-delay 0.500)
   :config
-  (progn
-    (setq
-     lsp-print-io nil
-     lsp-auto-configure t
-     lsp-enable-snippet t
-     lsp-completion-provider :capf
-     lsp-headerline-breadcrumb-enable nil
-     lsp-idle-delay 0.500)
-    (dolist (directories '("[/\\\\].data\\'"
-                           "[/\\\\].github\\'"
-                           "[/\\\\]gradle\\'"
-                           "[/\\\\].gradle\\'"
-                           "[/\\\\].storybook\\'"
-                           "[/\\\\].log\\'"
-                           "[/\\\\].lsp-java\\'"
-                           "[/\\\\]build\\'"
-                           "[/\\\\]jetty-temp\\'"
-                           "[/\\\\]coverage\\'"
-                           "[/\\\\].DS_Store")
-                         )
-      (push directories lsp-file-watch-ignored)))
-  :hook ((c-mode . lsp)
-         (c++-mode . lsp)
-         (java-mode . lsp)
-         (js-mode . lsp)
-         (rjsx-mode . lsp)
-         (js2-mode . lsp)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
+  (dolist (directories '("[/\\\\].data\\'"
+                         "[/\\\\].github\\'"
+                         "[/\\\\]gradle\\'"
+                         "[/\\\\].gradle\\'"
+                         "[/\\\\].storybook\\'"
+                         "[/\\\\].log\\'"
+                         "[/\\\\]eclipse.jdt.ls\\'"
+                         "[/\\\\]build\\'"
+                         "[/\\\\]jetty-temp\\'"
+                         "[/\\\\]coverage\\'"
+                         "[/\\\\].DS_Store")
+                       )
+    (push directories lsp-file-watch-ignored))
+  :hook (
+         ((c-mode c++-mode dart-mode java-mode js-mode js2-mode rjsx-mode swift-mode typescript-mode web-mode) . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
-  :after lsp-mode
   :commands (lsp-ui-mode
              lsp-ui-doc-show
              lsp-ui-doc-hide)
@@ -273,6 +268,21 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package lsp-ivy
   :commands lsp-ivy-workspace-symbol)
 
+
+(use-package lsp-treemacs
+  :bind (("M-p t e" . lsp-treemacs-errors-list)
+         ("M-p t r" . lsp-treemacs-references)
+         ("M-p t s" . lsp-treemacs-symbols))
+  :config
+  (progn
+    (lsp-treemacs-sync-mode 1)))
+
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp))))
+
 (use-package dap-mode
   :config
   (setq dap-auto-configure-features '(sessions locals controls tooltip))
@@ -285,13 +295,6 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
     (dap-ui-controls-mode t))
   (require 'dap-lldb)
   (require 'dap-cpptools))
-
-(use-package company-lsp
-  :straight (company-lsp :type git :host github :repo "tigersoldier/company-lsp")
-  :after company
-  :init
-  (setq company-lsp-cache-candidates t
-        company-lsp-async t))
 
 (use-package flycheck
   :demand t
@@ -352,21 +355,12 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 (use-package treemacs-magit
   :after (treemacs magit))
 
-(use-package lsp-treemacs
-  :after (treemacs lsp-mode)
-  :bind (("M-p t e" . lsp-treemacs-errors-list)
-         ("M-p t r" . lsp-treemacs-references)
-         ("M-p t s" . lsp-treemacs-symbols))
-  :config
-  (progn
-    (lsp-treemacs-sync-mode 1)))
-
 (use-package which-key
   :demand t
   :config
   (progn
-    (setq which-key-idle-delay 0.15)
-    (setq which-key-idle-secondary-delay 0.15)
+    (setq which-key-idle-delay 0.5)
+    (setq which-key-idle-secondary-delay 0.05)
     (which-key-mode)))
 
 (use-package ivy
@@ -462,11 +456,9 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   (yas-global-mode 1)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets")))
 
-
 ;; Dart and flutter mode
 (use-package lsp-dart
-  :after lsp-mode
-  :hook (dart-mode . lsp))
+  :after lsp-mode)
 
 ;; run app from desktop without emulator
 (use-package hover)
@@ -484,41 +476,28 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   (add-hook 'less-css-mode-hook (lambda ()
                                   (setq css-indent-offset 2))))
 
-;; Package `elm`
-(use-package elm-mode
-  :mode "\\.elm$"
-  :hook (elm-mode . elm-format-on-save-mode))
-
-(use-package flycheck-elm
-  :commands flycheck-elm-setup
-  :hook (flycheck-mode . flycheck-elm-setup))
-
 ;; Package `ember-mode`
 (use-package ember-mode)
 
 ;; Package `java`
 (use-package lsp-java
-  :hook (java-mode . lsp)
-  :init
-  (defvar lsp-java-test-path (f-join temporary-file-directory "tests"))
-  (setq
-   lsp-java-vmargs (list
-                    "-noverify"
-                    "-Xmx2G"
-                    "-XX:+UseG1GC"
-                    "-XX:+UseStringDeduplication"
-                    "-javaagent:/Users/tmn/.emacs.d/lib/lombok.jar")
-   lsp-java-pop-buffer-function 'pop-to-buffer
-   lsp-java-java-path "/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java"
-   lsp-java-workspace-dir (f-join lsp-java-test-path "workspace")
-   lsp-java-workspace-cache-dir (f-join temporary-file-directory "workspace-cache")
-   lsp-java-server-install-dir (locate-user-emacs-file ".lsp-java/server/")
-   lsp-response-timeout 30)
-  :config
+  :after (lsp-mode)
+  :custom
+  (setq lsp-java-vmargs
+        `("-noverify"
+          "-Xmx2G"
+          "-XX:+UseG1GC"
+          "-XX:+UseStringDeduplication"
+          ,(concat "-javaagent:" (expand-file-name "~/lib/lombok.jar"))
+          ,(concat "-Xbootclasspath/a:" (expand-file-name "~/lib/lombok.jar"))))
   (progn
     (require 'lsp-java-boot)
     (add-hook 'lsp-mode-hook 'lsp-lens-mode)
-    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode)))
+    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode))
+  :custom
+  (lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
+  (lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
+  (lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache")))
 
 (use-package dap-java
   :straight (dap-java :type git :host github :repo "emacs-lsp/lsp-java"))
@@ -548,17 +527,22 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
 
 (use-package js2-refactor
   :after js2-mode
-  :hook (js2-mode . js2-refactor-mode))
+  :hook ((js2-mode . js2-refactor-mode)))
+
+(use-package typescript-mode
+  :mode "\\.\\(ts\\|tsx\\)$"
+  :init
+  (setq-default typescript-indent-level 2))
+
+(use-package rjsx-mode
+  :mode "\\.js$"
+  :commands (rjsx-mode))
 
 (use-package web-mode
   :mode "\\.html$"
   :config
   (setq web-mode-enable-auto-closing t)
   (setq web-mode-enable-auto-pairing t))
-
-(use-package rjsx-mode
-  :mode "\\.js$"
-  :commands (rjsx-mode))
 
 (use-package nodejs-repl
   :config
@@ -570,12 +554,6 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
               (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
               (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
               (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
-
-(use-package tide
-  :after (typescript-mode company flycheck)
-  :hook ((typescript-mode . tide-setup)
-         (typescript-mode . tide-hl-identifier-mode)
-         (before-save . tide-format-before-save)))
 
 ;; Package `json`
 (use-package json-mode
@@ -599,12 +577,6 @@ s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.
   (python-mode . company-mode)
   :custom
   (python-shell-interpreter "python3"))
-
-(use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp))))
 
 ;; Package org-mode
 (use-package org
@@ -688,14 +660,14 @@ This runs `org-insert-heading' with
          ("\\.rst$" . rst-mode)
          ("\\.rest$" . rst-mode)))
 
-(use-package swift-mode
-  :after lsp-mode
-  :hook (swift-mode . lsp))
-
+;; Swift
 (use-package lsp-sourcekit
   :after lsp-mode
   :config
   (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
+
+(use-package swift-mode
+  :after lsp-mode)
 
 (use-package yaml-mode)
 

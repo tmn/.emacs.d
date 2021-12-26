@@ -34,12 +34,15 @@ Install system dependencies for some of the emacs packages:
 * ripgrep
 * ctags
 * node
+* openjdk@11
 
 I.e. using brew:
 
 ```bash
-brew install ripgrep ctags node
+brew install ripgrep ctags node openjdk@11
 ```
+
+> Rember to add Java to `PATH`.
 
 ### Other dependencies
 

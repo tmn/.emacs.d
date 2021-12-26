@@ -15,7 +15,6 @@ projectile-bookmarks.eld
 .cache/
 .dap-breakpoints
 .extension/
-.lsp-java/
 .lsp-eslint-choices
 .lsp-session-v1
 
