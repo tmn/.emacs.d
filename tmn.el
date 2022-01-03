@@ -143,7 +143,8 @@
 
 (use-package doom-themes
   :init
-  (load-theme 'doom-one-light t)
+  (load-theme 'doom-vibrant t)
+
   :config
   (progn
     (setq doom-themes-enable-bold t
