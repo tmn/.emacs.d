@@ -195,8 +195,7 @@
 
   (setq projectile-globally-ignored-directories (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules"  "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
         projectile-globally-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
-        grep-find-ignored-files (append '("*.bundle.j
-s" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
+        grep-find-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
 
 (use-package company
   :commands company-mode
