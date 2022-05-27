@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: <section> (tag)
+# key: section
+# --
+<section>$0</section>

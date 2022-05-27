@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: unordered list element (tag)
+# group: list
+# --
+<li>$0</li>

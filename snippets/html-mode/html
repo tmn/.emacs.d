@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: <html> ... </html>
+# --
+<html lang="${1:en}">
+    <head>
+         <meta charset="utf-8">
+         <title>${2:title}</title>
+    <head>
+    <body>
+         $0
+    <body>
+</html>

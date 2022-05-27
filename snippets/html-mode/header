@@ -1,0 +1,4 @@
+# -*- mode: snippet -*-
+# name: <header> ... </header>
+# --
+<header>$0</header>

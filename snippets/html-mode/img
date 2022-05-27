@@ -1,0 +1,4 @@
+# -*- mode: snippet -*-
+# name: <img alt="..." src="..." widht="..." height="..." />
+# --
+<img alt="$1" src="$2" width="${3:0}" height="${4:0}" />

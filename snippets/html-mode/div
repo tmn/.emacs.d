@@ -1,0 +1,4 @@
+# -*- mode: snippet -*-
+# name: <div> ... </div>
+# --
+<div>$0</div>
