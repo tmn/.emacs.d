@@ -35,11 +35,12 @@ Install system dependencies for some of the emacs packages:
 * ctags
 * node
 * openjdk@11
+* coreutils
 
 I.e. using brew:
 
 ```bash
-brew install ripgrep ctags node openjdk@11
+brew install ripgrep ctags node openjdk@11 coreutils
 ```
 
 > Rember to add Java to `PATH`.

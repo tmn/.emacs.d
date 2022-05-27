@@ -5,45 +5,18 @@
 
 ;;; Code:
 
-(defconst tmn/is-mac (eq system-type 'darwin))
-(defconst tmn/is-linux (eq system-type 'gnu/linux))
-(defconst tmn/is-windows (eq system-type 'windows-nt))
+;; -----------------------------------------------------------------------------
+;; Load OS specific settings
+;; -----------------------------------------------------------------------------
 
-(when tmn/is-mac
-  (setq
-   ns-use-mwheel-momentum t
-   ns-use-mwheel-acceleration t
-   dired-use-ls-dired nil
-   native-comp-async-report-warnings-errors nil
+(when (eq system-type 'darwin)
+  (load (expand-file-name "osx.el" user-emacs-directory)))
 
-   ns-function-modifier 'hyper
-   mac-command-modifier 'meta
-   mac-option-modifier 'super
+(when (eq system-type 'windows-nt)
+  (load (expand-file-name "windows.el" user-emacs-directory)))
 
-   trash-directory "~/.Trash/emacs")
-
-  ;; Map æøå keys to macOS using non-Norwegian keymap
-  (define-key key-translation-map (kbd "s-a") "å")
-  (define-key key-translation-map (kbd "s-'") "æ")
-  (define-key key-translation-map (kbd "s-o") "ø")
-  (define-key key-translation-map (kbd "s-A") "Å")
-  (define-key key-translation-map (kbd "s-\"") "Æ")
-  (define-key key-translation-map (kbd "s-O") "Ø")
-
-  (define-key (current-global-map) (kbd "s-p") nil)
-  (define-key (current-global-map) (kbd "s-o") nil)
-  (define-key (current-global-map) (kbd "s-t") nil)
-
-  (use-package exec-path-from-shell
-    :init (exec-path-from-shell-initialize)))
-
-(when tmn/is-windows
-  (require 'ls-lisp)
-  (setq ls-lisp-use-insert-directory-program nil))
-
-(when tmn/is-linux
-  (menu-bar-mode -1)
-  (tool-bar-mode -1))
+(when (eq system-type 'gnu/linux)
+  (load (expand-file-name "linux.el" user-emacs-directory)))
 
 
 ;; -----------------------------------------------------------------------------
@@ -55,8 +28,11 @@
  create-lockfiles nil
  indent-tabs-mode nil
  line-spacing 6
+ tab-width 2
  make-backup-files nil
  tab-always-indent 'complete)
+
+(setq native-comp-async-report-warnings-errors nil)
 
 (column-number-mode t)
 (global-hl-line-mode 1)
@@ -103,14 +79,14 @@
 ;; Some custom stuffs
 ;; -----------------------------------------------------------------------------
 
-(defun tmn/move-line-up ()
+(defun t/move-line-up ()
   "Move up the current line."
   (interactive)
   (transpose-lines 1)
   (forward-line -2)
   (indent-according-to-mode))
 
-(defun tmn/move-line-down ()
+(defun t/move-line-down ()
   "Move down the current line."
   (interactive)
   (forward-line 1)
@@ -118,13 +94,34 @@
   (forward-line -1)
   (indent-according-to-mode))
 
-(global-set-key (kbd "M-S-<up>") 'tmn/move-line-up)
-(global-set-key (kbd "M-S-<down>") 'tmn/move-line-down)
+(global-set-key (kbd "M-S-<up>") 't/move-line-up)
+(global-set-key (kbd "M-S-<down>") 't/move-line-down)
 
+
+;; -----------------------------------------------------------------------------
 ;; Confirm exit emacs
+;; -----------------------------------------------------------------------------
+
 (add-hook 'kill-emacs-query-functions
           (lambda () (y-or-n-p "Dumme ape! Quitting already??? "))
           'append)
+
+
+;; -----------------------------------------------------------------------------
+;; Native Parentheses Matching
+;; -----------------------------------------------------------------------------
+
+(show-paren-mode 1)
+(setq show-paren-delay 0)
+
+(global-set-key "%" 'match-paren)
+
+(defun match-paren (arg)
+  "Go to the matching paren if on a paren; otherwise insert %."
+  (interactive "p")
+  (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
+        ((looking-at "\\s)") (forward-char 1) (backward-list 1))
+        (t (self-insert-command (or arg 1)))))
 
 
 ;; -----------------------------------------------------------------------------
@@ -144,7 +141,6 @@
 (use-package doom-themes
   :init
   (load-theme 'doom-vibrant t)
-
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -165,22 +161,22 @@
         doom-modeline-indent-info nil
         doom-modeline-env-version t))
 
+(use-package expand-region
+  :bind (("C-=" . er/expand-region)
+         ("C-." . er/contract-region)))
+
 (use-package multiple-cursors
   :bind (("C-c C-. ."   . mc/mark-all-dwim)
          ("C-c C-. C-." . mc/mark-all-like-this-dwim)
-         ("C-c C-. a"   . mc/mark-all-like-this)
          ("C-c C-. n"   . mc/mark-next-symbol-like-this)
          ("C-c C-. P"   . mc/mark-previous-symbol-like-this)
          ("C-c C-. A"   . mc/mark-all-symbols-like-this)
          ("C-c C-. f"   . mc/mark-all-like-this-in-defun)
          ("C-c C-. l"   . mc/edit-lines)
          ("C-c C-. e"   . mc/edit-ends-of-lines)
+         ("C-c C-<" . mc/mark-all-like-this)
          ("C->"     . mc/mark-next-like-this)
          ("C-<"     . mc/mark-previous-like-this)))
-
-(use-package highlight-parentheses
-  :commands highlight-parentheses-mode
-  :hook (prog-mode . highlight-parentheses-mode))
 
 (use-package projectile
   :commands (projectile-mode projectile-project-root projectile-find-file)
@@ -203,7 +199,7 @@
   :hook (prog-mode . company-mode)
   :custom
   (company-minimum-prefix-length 1)
-  (company-idle-delay 0.1)
+  (company-idle-delay 0.15)
   (company-tooltip-align-annotations t)
   (company-tooltip-flip-when-above t)
   (company-show-numbers t)
@@ -214,15 +210,16 @@
 
 (use-package lsp-mode
   :commands lsp
-  :init (setq lsp-keymap-prefix "C-c l")
+  :init (setq lsp-keymap-prefix "s-l")
   :bind ("M-RET" . lsp-execute-code-action)
   :custom
+;  (lsp-restart 'auto-restart)
   (lsp-print-io nil)
   (lsp-auto-configure t)
   (lsp-enable-snippet t)
   (lsp-completion-provider :capf)
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-idle-delay 0.500)
+  (lsp-idle-delay 0.5)
   :config
   (dolist (directories '("[/\\\\].data\\'"
                          "[/\\\\].github\\'"
@@ -237,8 +234,11 @@
                          "[/\\\\].DS_Store")
                        )
     (push directories lsp-file-watch-ignored))
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
   :hook (
-         ((c-mode c++-mode dart-mode java-mode js-mode js2-mode rjsx-mode swift-mode typescript-mode web-mode) . lsp-deferred)
+         ((c-mode c++-mode dart-mode java-mode js-mode js2-mode rjsx-mode swift-mode typescript-tsx-mode typescript-mode web-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
@@ -247,16 +247,21 @@
              lsp-ui-doc-hide)
   :init
   (progn
-    (defvar tmn/lsp-ui-doc-max-height 10)
-    (defvar tmn/lsp-ui-doc-max-width 60)
+    (defvar t/lsp-ui-doc-max-height 10)
+    (defvar t/lsp-ui-doc-max-width 60)
 
-    (setq lsp-ui-sideline-show-code-actions t
-          lsp-ui-sideline-show-hover t
-          lsp-ui-doc-enable nil
-          lsp-ui-peek-fontify t)
-    (setq lsp-ui-doc-position 'at-point
-          lsp-ui-doc-max-height tmn/lsp-ui-doc-max-height
-          lsp-ui-doc-max-width tmn/lsp-ui-doc-max-width))
+    (setq
+     lsp-ui-sideline-enable t
+     lsp-ui-sideline-show-code-actions t
+     lsp-ui-sideline-show-hover nil
+     lsp-ui-sideline-show-symbol t
+     lsp-ui-sideline-show-diagnostics nil
+     lsp-ui-doc-enable nil
+     lsp-ui-peek-fontify t)
+    (setq
+     lsp-ui-doc-position 'at-point
+     lsp-ui-doc-max-height t/lsp-ui-doc-max-height
+     lsp-ui-doc-max-width t/lsp-ui-doc-max-width))
   :config
   (progn
     (define-key lsp-command-map (kbd "d s") 'lsp-ui-doc-show)
@@ -267,7 +272,6 @@
 
 (use-package lsp-ivy
   :commands lsp-ivy-workspace-symbol)
-
 
 (use-package lsp-treemacs
   :bind (("M-p t e" . lsp-treemacs-errors-list)
@@ -360,8 +364,9 @@
   :config
   (progn
     (setq which-key-idle-delay 0.5)
-    (setq which-key-idle-secondary-delay 0.05)
     (which-key-mode)))
+
+
 
 (use-package ivy
   :bind (("C-c C-r" . ivy-resume)
@@ -404,19 +409,6 @@
              counsel-projectile-rg)
   :bind (("C-x C-o" . counsel-projectile-find-file)
          ("C-x C-p" . counsel-projectile-rg)))
-
-(use-package counsel-etags
-  :after counsel
-  :bind (("C-]" . counsel-etags-find-tag-at-point))
-  :init
-  (add-hook 'prog-mode-hook
-            (lambda ()
-              (add-hook 'after-save-hook
-                        'counsel-etags-virtual-update-tags 'append 'local)))
-  :config
-  (setq counsel-etags-update-interval 60)
-  (push "build" counsel-etags-ignore-directories))
-
 
 (use-package all-the-icons
   :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el"))
@@ -462,22 +454,6 @@
 
 ;; run app from desktop without emulator
 (use-package hover)
-
-;; Package `css`
-(use-package css-mode
-  :mode "\\.css$"
-  :config
-  (add-hook 'css-mode-hook (lambda ()
-                             (setq css-indent-offset 2))))
-
-(use-package less-css-mode
-  :mode "\\.less$"
-  :config
-  (add-hook 'less-css-mode-hook (lambda ()
-                                  (setq css-indent-offset 2))))
-
-;; Package `ember-mode`
-(use-package ember-mode)
 
 ;; Package `java`
 (use-package lsp-java
@@ -530,7 +506,7 @@
   :hook ((js2-mode . js2-refactor-mode)))
 
 (use-package typescript-mode
-  :mode "\\.\\(ts\\|tsx\\)$"
+  :mode "\\.\\(ts\\)$"
   :init
   (setq-default typescript-indent-level 2))
 
@@ -538,11 +514,49 @@
   :mode "\\.js$"
   :commands (rjsx-mode))
 
-(use-package web-mode
-  :mode "\\.html$"
+(use-package css-mode
+  :mode "\\.css$"
   :config
-  (setq web-mode-enable-auto-closing t)
-  (setq web-mode-enable-auto-pairing t))
+  (add-hook 'css-mode-hook (lambda ()
+                             (setq css-indent-offset 2))))
+
+(use-package less-css-mode
+  :mode "\\.less$"
+  :config
+  (add-hook 'less-css-mode-hook (lambda ()
+                                  (setq css-indent-offset 2))))
+
+(use-package ember-mode)
+
+(use-package web-mode
+  :commands (web-mode)
+  :hook ((web-mode . lsp-deferred)
+         (typescript-tsx-mode . lsp-deferred))
+  :mode (("\\.html\\'" . web-mode)
+         ("\\.html\\.eex\\'" . web-mode)
+         ("\\.html\\.tera\\'" . web-mode)
+         ("\\.tsx\\'" . typescript-tsx-mode))
+  :init
+  (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
+  (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+  :custom
+  (web-mode-markup-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  :config
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-enable-auto-closing t
+        web-mode-enable-auto-pairing t))
+
+(use-package prettier-js
+  :commands prettier-js-mode
+  :hook ((typescript-tsx-mode . prettier-js-mode)
+         (typescript-mode . prettier-js-mode)
+         ;; (css-mode . prettier-js-mode)
+         (json-mode . prettier-js-mode)
+         (web-mode . prettier-js-mode)))
 
 (use-package nodejs-repl
   :config
@@ -555,19 +569,18 @@
               (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
               (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
 
-;; Package `json`
 (use-package json-mode
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
+
+(use-package restclient)
 
 (use-package json-reformat
   :commands json-reformat
   :init (setq json-reformat:indent-width 2))
 
-;; Package `json`
 (use-package markdown-mode
-  :mode "\\.md$")
+  :mode "\\.\\(md\\|markdown\\)$")
 
-;; Package `mustache`
 (use-package mustache-mode
   :mode "\\.mustache$")
 

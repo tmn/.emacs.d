@@ -8,10 +8,10 @@
 ;;; Code:
 
 (let ((alternative-user-emacs-directory (getenv "USER_EMACS_DIRECTORY")))
-  (defvar tmn/config-file-loaded-p nil)
+  (defvar t/config-file-loaded-p nil)
 
   (cond
-   ((and (not after-init-time) tmn/config-file-loaded-p))
+   ((and (not after-init-time) t/config-file-loaded-p))
 
    (alternative-user-emacs-directory
     (setq alternative-user-emacs-directory
@@ -21,20 +21,20 @@
     (load user-init-file 'noerror 'nomessage))
 
    (t
-    (setq tmn/config-file-loaded-p t)
+    (setq t/config-file-loaded-p t)
 
-    (defvar tmn/minimum-emacs-version "27.1"
+    (defvar t/minimum-emacs-version "27.1"
       "The tmn.el configuration does not support any Emacs version below this.")
 
-    (if (version< emacs-version tmn/minimum-emacs-version)
+    (if (version< emacs-version t/minimum-emacs-version)
         (error (concat "Your Emacs is too old -- "
                        "this config requires v%s or higher")
-               tmn/minimum-emacs-version)
+               t/minimum-emacs-version)
 
-      (let ((tmn/lib-file (concat user-emacs-directory "tmn.el")))
-        (unless (file-exists-p tmn/lib-file)
-          (error "No file found: %s" tmn/lib-file))
+      (let ((t/lib-file (concat user-emacs-directory "tmn.el")))
+        (unless (file-exists-p t/lib-file)
+          (error "No file found: %s" t/lib-file))
 
-        (load tmn/lib-file nil 'nomessage 'nosuffix))))))
+        (load t/lib-file nil 'nomessage 'nosuffix))))))
 
 ;;; init.el ends here
