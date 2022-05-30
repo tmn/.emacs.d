@@ -155,9 +155,9 @@
         doom-modeline-icon t
         doom-modeline-major-mode-icon t
         doom-modeline-major-mode-color-icon t
-        doom-modeline-buffer-file-name-style 'auto
+        doom-modeline-buffer-file-name-style 'file-name
         doom-modeline-minor-modes nil
-        doom-modeline-buffer-encoding t
+        doom-modeline-buffer-encoding nil
         doom-modeline-indent-info nil
         doom-modeline-env-version t))
 
@@ -210,10 +210,9 @@
 
 (use-package lsp-mode
   :commands lsp
-  :init (setq lsp-keymap-prefix "s-l")
+  :init (setq lsp-keymap-prefix "C-c C-l")
   :bind ("M-RET" . lsp-execute-code-action)
   :custom
-;  (lsp-restart 'auto-restart)
   (lsp-print-io nil)
   (lsp-auto-configure t)
   (lsp-enable-snippet t)
@@ -231,14 +230,20 @@
                          "[/\\\\]build\\'"
                          "[/\\\\]jetty-temp\\'"
                          "[/\\\\]coverage\\'"
-                         "[/\\\\].DS_Store")
-                       )
+                         "[/\\\\].DS_Store"))
     (push directories lsp-file-watch-ignored))
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
   :hook (
-         ((c-mode c++-mode dart-mode java-mode js-mode js2-mode rjsx-mode swift-mode typescript-tsx-mode typescript-mode web-mode) . lsp-deferred)
+         ((c-mode
+           c++-mode
+           dart-mode
+           java-mode
+           js-mode
+           js2-mode
+           rjsx-mode
+           swift-mode
+           typescript-mode
+           typescript-tsx-mode
+           web-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
@@ -278,8 +283,7 @@
          ("M-p t r" . lsp-treemacs-references)
          ("M-p t s" . lsp-treemacs-symbols))
   :config
-  (progn
-    (lsp-treemacs-sync-mode 1)))
+  (progn (lsp-treemacs-sync-mode 1)))
 
 (use-package lsp-pyright
   :ensure t
@@ -359,13 +363,17 @@
 (use-package treemacs-magit
   :after (treemacs magit))
 
+
 (use-package which-key
   :demand t
   :config
   (progn
-    (setq which-key-idle-delay 0.5)
+    (setq which-key-add-column-padding 1
+          which-key-max-display-columns nil
+          which-key-min-display-lines 1
+          which-key-separator " "
+          which-key-idle-delay 0.5)
     (which-key-mode)))
-
 
 
 (use-package ivy
@@ -506,7 +514,7 @@
   :hook ((js2-mode . js2-refactor-mode)))
 
 (use-package typescript-mode
-  :mode "\\.\\(ts\\)$"
+  :mode "\\.\\(ts\\|tsx\\)$"
   :init
   (setq-default typescript-indent-level 2))
 
@@ -539,10 +547,6 @@
   :init
   (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
   (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
-  :custom
-  (web-mode-markup-indent-offset 2)
-  (web-mode-css-indent-offset 2)
-  (web-mode-code-indent-offset 2)
   :config
   (setq web-mode-markup-indent-offset 2)
   (setq web-mode-code-indent-offset 2)
@@ -552,11 +556,10 @@
 
 (use-package prettier-js
   :commands prettier-js-mode
-  :hook ((typescript-tsx-mode . prettier-js-mode)
-         (typescript-mode . prettier-js-mode)
-         ;; (css-mode . prettier-js-mode)
-         (json-mode . prettier-js-mode)
-         (web-mode . prettier-js-mode)))
+  :hook ((typescript-mode
+          typescript-tsx-mode
+          json-mode
+          web-mode) . prettier-js-mode))
 
 (use-package nodejs-repl
   :config
@@ -700,5 +703,24 @@ This runs `org-insert-heading' with
 
 (use-package qml-mode
   :mode "\\.qml$")
+
+(use-package csharp-mode
+  :commands (csharp-tree-sitter-mode)
+  :mode "\\.cs$"
+  :config
+  (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
+
+(use-package tree-sitter-langs)
+(use-package tree-sitter
+  :commands (tree-sitter-mode global-tree-sitter-mode)
+  :init
+  (require 'tree-sitter-langs)
+  (global-tree-sitter-mode)
+  :config
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  (push '(typescript-tsx-mode . typescript) tree-sitter-major-mode-language-alist))
+
+
+
 
 ;;; tmn.el ends here
