@@ -242,7 +242,7 @@
            rjsx-mode
            swift-mode
            typescript-mode
-           typescript-tsx-mode
+           tsx-mode
            web-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
@@ -538,15 +538,9 @@
 
 (use-package web-mode
   :commands (web-mode)
-  :hook ((web-mode . lsp-deferred)
-         (typescript-tsx-mode . lsp-deferred))
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
-         ("\\.html\\.tera\\'" . web-mode)
-         ("\\.tsx\\'" . typescript-tsx-mode))
-  :init
-  (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
-  (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+         ("\\.html\\.tera\\'" . web-mode))
   :config
   (setq web-mode-markup-indent-offset 2)
   (setq web-mode-code-indent-offset 2)
@@ -557,7 +551,7 @@
 (use-package prettier-js
   :commands prettier-js-mode
   :hook ((typescript-mode
-          typescript-tsx-mode
+          tsx-mode
           json-mode
           web-mode) . prettier-js-mode))
 
@@ -593,6 +587,18 @@
   (python-mode . company-mode)
   :custom
   (python-shell-interpreter "python3"))
+
+(use-package tsi
+  :commands (tsi-typescript-mode)
+  :straight (tsi :type git :host github :repo "orzechowskid/tsi.el")
+  :mode (("\\.tsx$" . tsi-typescript-mode)))
+
+(use-package origami
+  :straight (origami :type git :host github :repo "gregsexton/origami.el"))
+
+(use-package tsx-mode
+  :straight (tsx-mode :type git :host github :repo "orzechowskid/tsx-mode.el")
+  :mode (("\\.tsx$" . tsx-mode)))
 
 ;; Package org-mode
 (use-package org
@@ -710,15 +716,19 @@ This runs `org-insert-heading' with
   :config
   (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
 
-(use-package tree-sitter-langs)
+;; Tree Sitter
+(use-package tree-sitter-langs
+  :config
+  (tree-sitter-require 'tsx))
+
 (use-package tree-sitter
   :commands (tree-sitter-mode global-tree-sitter-mode)
+
   :init
   (require 'tree-sitter-langs)
   (global-tree-sitter-mode)
   :config
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  (push '(typescript-tsx-mode . typescript) tree-sitter-major-mode-language-alist))
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
 
 
