@@ -32,6 +32,9 @@
  make-backup-files nil
  tab-always-indent 'complete)
 
+(if (file-directory-p "/opt/homebrew/opt/openjdk@11")
+    (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
+
 (setq native-comp-async-report-warnings-errors nil)
 
 (column-number-mode t)
@@ -140,12 +143,18 @@
 
 (use-package doom-themes
   :init
-  (load-theme 'doom-vibrant t)
+  ; (load-theme 'doom-vibrant t)
+  (load-theme 'doom-opera-light t)
+  ; (load-theme 'tsdh-light t)
+  ; (disable-theme 'doom-vibrant)
+  ; (disable-theme 'doom-opera-light)
+  ; (disable-theme 'tsdh-light)
   :config
   (progn
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
     (doom-themes-visual-bell-config)))
+
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
@@ -335,6 +344,9 @@
          ("M-8" . winum-select-window-8)
          ("M-9" . winum-select-window-9)))
 
+
+(use-package treemacs-all-the-icons)
+
 (use-package treemacs
   :init
   (with-eval-after-load 'winum
@@ -346,6 +358,8 @@
          ("C-c t C-t" . treemacs-find-file)
          ("C-c t M-t" . treemacs-find-tag))
   :config
+  (require 'treemacs-all-the-icons)
+  (treemacs-load-theme "all-the-icons")
   (progn
     (setq treemacs-project-follow-mode t)
     (treemacs-resize-icons 16)
@@ -466,22 +480,22 @@
 ;; Package `java`
 (use-package lsp-java
   :after (lsp-mode)
-  :custom
+  :config
   (setq lsp-java-vmargs
         `("-noverify"
           "-Xmx2G"
           "-XX:+UseG1GC"
           "-XX:+UseStringDeduplication"
-          ,(concat "-javaagent:" (expand-file-name "~/lib/lombok.jar"))
-          ,(concat "-Xbootclasspath/a:" (expand-file-name "~/lib/lombok.jar"))))
+          ,(concat "-javaagent:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))
+          ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))))
+  (setq lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
+  (setq lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
+  (setq lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache"))
+  :custom
   (progn
     (require 'lsp-java-boot)
     (add-hook 'lsp-mode-hook 'lsp-lens-mode)
-    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode))
-  :custom
-  (lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
-  (lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
-  (lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache")))
+    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode)))
 
 (use-package dap-java
   :straight (dap-java :type git :host github :repo "emacs-lsp/lsp-java"))
