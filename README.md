@@ -40,7 +40,7 @@ Install system dependencies for some of the emacs packages:
 I.e. using brew:
 
 ```bash
-brew install ripgrep ctags node openjdk@11 coreutils
+brew install ripgrep ctags node openjdk@11 coreutils librsvg
 ```
 
 > Rember to add Java to `PATH`.
