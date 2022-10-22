@@ -32,14 +32,19 @@
  make-backup-files nil
  tab-always-indent 'complete)
 
-(if (file-directory-p "/opt/homebrew/opt/openjdk@11")
-    (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
-
 (setq native-comp-async-report-warnings-errors nil)
 
 (column-number-mode t)
 (global-hl-line-mode 1)
 
+;; -----------------------------------------------------------------------------
+;; Environemtn Variables
+;; -----------------------------------------------------------------------------
+
+(if (file-directory-p "/opt/homebrew/opt/openjdk@11")
+    (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
+
+(setenv "RUSTUP_TOOLCHAIN" "stable")
 
 ;; -----------------------------------------------------------------------------
 ;; Modify some GUI features
@@ -144,17 +149,16 @@
 (use-package doom-themes
   :init
   ; (load-theme 'doom-vibrant t)
-  (load-theme 'doom-opera-light t)
+  ; (load-theme 'doom-opera-light t)
   ; (load-theme 'tsdh-light t)
-  ; (disable-theme 'doom-vibrant)
-  ; (disable-theme 'doom-opera-light)
-  ; (disable-theme 'tsdh-light)
+  (disable-theme 'doom-vibrant)
+  (disable-theme 'doom-opera-light)
+  (disable-theme 'tsdh-light)
   :config
   (progn
     (setq doom-themes-enable-bold t
           doom-themes-enable-italic t)
     (doom-themes-visual-bell-config)))
-
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
@@ -249,6 +253,7 @@
            js-mode
            js2-mode
            rjsx-mode
+           rust-mode
            swift-mode
            typescript-mode
            tsx-mode
@@ -696,6 +701,14 @@ This runs `org-insert-heading' with
          ("\\.rst$" . rst-mode)
          ("\\.rest$" . rst-mode)))
 
+
+;; Qt
+(use-package qml-mode
+  :mode "\\.qml$"
+  :config
+  (setq tab-width 4
+        qml-indent-width 4))
+
 ;; Swift
 (use-package lsp-sourcekit
   :after lsp-mode
@@ -704,6 +717,38 @@ This runs `org-insert-heading' with
 
 (use-package swift-mode
   :after lsp-mode)
+
+;; Rust
+(use-package rust-mode
+  :mode "\\.rs$"
+  :hook (rust-modde . (lambda () (setq indent-tabs-mode nil)))
+  :config
+  (setq rust-format-on-save t))
+
+;; C#
+(use-package csharp-mode
+  :commands (csharp-tree-sitter-mode)
+  :mode "\\.cs$"
+  :config
+  (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
+
+(use-package cargo
+  :hook (rust-mode . cargo-minor-mode))
+
+;; Tree Sitter
+(use-package tree-sitter-langs
+  :config
+  (tree-sitter-require 'tsx))
+
+(use-package tree-sitter
+  :commands (tree-sitter-mode global-tree-sitter-mode)
+  :init
+  (require 'tree-sitter-langs)
+  (global-tree-sitter-mode)
+  :config
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+;;; Other tools
 
 (use-package yaml-mode)
 
@@ -720,31 +765,5 @@ This runs `org-insert-heading' with
 
 (use-package protobuf-mode
   :mode "\\.proto$")
-
-(use-package qml-mode
-  :mode "\\.qml$")
-
-(use-package csharp-mode
-  :commands (csharp-tree-sitter-mode)
-  :mode "\\.cs$"
-  :config
-  (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
-
-;; Tree Sitter
-(use-package tree-sitter-langs
-  :config
-  (tree-sitter-require 'tsx))
-
-(use-package tree-sitter
-  :commands (tree-sitter-mode global-tree-sitter-mode)
-
-  :init
-  (require 'tree-sitter-langs)
-  (global-tree-sitter-mode)
-  :config
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-
-
 
 ;;; tmn.el ends here
