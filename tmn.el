@@ -760,6 +760,8 @@ This runs `org-insert-heading' with
   :config
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
+(use-package tree-sitter-indent)
+
 ;;; Other tools
 
 (use-package yaml-mode)
@@ -777,5 +779,14 @@ This runs `org-insert-heading' with
 
 (use-package protobuf-mode
   :mode "\\.proto$")
+
+(use-package minimap
+  :commands (minimap-mode)
+  :bind (("C-c o  m" . minimap-mode))
+  :init
+  (setq minimap-window-location 'right
+        minimap-minimum-width 15
+        minimap-hide-fringes nil
+        minimap-width-fraction 0.13))
 
 ;;; tmn.el ends here
