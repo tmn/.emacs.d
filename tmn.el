@@ -27,7 +27,7 @@
  auto-save-default nil
  create-lockfiles nil
  indent-tabs-mode nil
- line-spacing 6
+ ; line-spacing 2; Commented for now - this only adds bottom padding
  tab-width 2
  make-backup-files nil
  tab-always-indent 'complete)
@@ -149,11 +149,8 @@
 (use-package doom-themes
   :init
   ; (load-theme 'doom-vibrant t)
-  ; (load-theme 'doom-opera-light t)
+  (load-theme 'doom-opera-light t)
   ; (load-theme 'tsdh-light t)
-  (disable-theme 'doom-vibrant)
-  (disable-theme 'doom-opera-light)
-  (disable-theme 'tsdh-light)
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -195,6 +192,7 @@
   :commands (projectile-mode projectile-project-root projectile-find-file)
   :config
   (projectile-mode +1)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (setq projectile-completion-system 'ivy
         projectile-require-project-root nil
         projectile-mode-line '(:eval (format "[%s]" (projectile-project-name)))
@@ -353,9 +351,17 @@
 (use-package treemacs-all-the-icons)
 
 (use-package treemacs
+  :commands (treemacs-follow-mode
+             treemacs-filewatch-mode
+             treemacs-load-theme)
   :init
   (with-eval-after-load 'winum
     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  (setq treemacs-follow-after-init t
+        treemacs-is-never-other-window t
+        treemacs-sorting 'alphabetic-case-insensitive-asc
+        treemacs-persist-file "~/.emacs.d/.cache/treemacs-persist"
+        treemacs-last-error-persist-file "~/.emacs.d/.cache/treemacs-last-error-persist")
   :bind (("M-0"       . treemacs-select-window)
          ("C-x t 1"   . treemacs-delete-other-windows)
          ("C-c t t"   . treemacs)
@@ -365,11 +371,15 @@
   :config
   (require 'treemacs-all-the-icons)
   (treemacs-load-theme "all-the-icons")
-  (progn
-    (setq treemacs-project-follow-mode t)
-    (treemacs-resize-icons 16)
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)))
+  (setq treemacs-project-follow-mode t)
+  (treemacs-follow-mode t)
+  (treemacs-filewatch-mode t)
+
+
+  :custom
+  (treemacs-space-between-root-nodes nil)
+  (treemacs-fringe-indicator-mode nil)
+  (treemacs-indentation 2))
 
 (use-package treemacs-projectile
   :after (treemacs projectile))
@@ -438,7 +448,9 @@
          ("C-x C-p" . counsel-projectile-rg)))
 
 (use-package all-the-icons
-  :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el"))
+  :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el")
+  :config
+  (setq all-the-icons-scale-factor 0.9))
 
 (use-package all-the-icons-ivy-rich
   :after ivy-rich
