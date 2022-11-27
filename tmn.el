@@ -230,6 +230,21 @@
   (lsp-completion-provider :capf)
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-idle-delay 0.5)
+
+  ;; what to use when checking on-save. "check" is default, I prefer clippy
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
+  (lsp-eldoc-render-all t)
+  (lsp-idle-delay 0.6)
+  ;; This controls the overlays that display type and other hints inline. Enable
+  ;; / disable as you prefer. Well require a `lsp-workspace-restart' to have an
+  ;; effect on open projects.
+  (lsp-rust-analyzer-server-display-inlay-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (lsp-rust-analyzer-display-chaining-hints t)
+  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+  (lsp-rust-analyzer-display-closure-return-type-hints t)
+  (lsp-rust-analyzer-display-parameter-hints nil)
+  (lsp-rust-analyzer-display-reborrow-hints nil)
   :config
   (dolist (directories '("[/\\\\].data\\'"
                          "[/\\\\].github\\'"
@@ -251,7 +266,6 @@
            js-mode
            js2-mode
            rjsx-mode
-           rust-mode
            swift-mode
            typescript-mode
            tsx-mode
@@ -369,12 +383,11 @@
          ("C-c t C-t" . treemacs-find-file)
          ("C-c t M-t" . treemacs-find-tag))
   :config
+  (treemacs-follow-mode -1)
   (require 'treemacs-all-the-icons)
   (treemacs-load-theme "all-the-icons")
   (setq treemacs-project-follow-mode t)
-  (treemacs-follow-mode t)
   (treemacs-filewatch-mode t)
-
 
   :custom
   (treemacs-space-between-root-nodes nil)
@@ -730,12 +743,45 @@ This runs `org-insert-heading' with
 (use-package swift-mode
   :after lsp-mode)
 
-;; Rust
-(use-package rust-mode
-  :mode "\\.rs$"
-  :hook (rust-modde . (lambda () (setq indent-tabs-mode nil)))
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status)
+              ("C-c C-c e" . lsp-rust-analyzer-expand-macro)
+              ("C-c C-c d" . dap-hydra)
+              ("C-c C-c h" . lsp-ui-doc-glance))
   :config
-  (setq rust-format-on-save t))
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (add-hook 'rustic-mode-hook 't/rustic-mode-hook)
+)
+
+(defun t/rustic-mode-hook ()
+  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
+  ;; save rust buffers that are not file visiting. Once
+  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+  ;; no longer be necessary.
+  (when buffer-file-name
+    (setq-local buffer-save-without-query t))
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+
+(use-package rust-playground :ensure)
+
+(use-package toml-mode :ensure)
+
+(use-package cargo
+ :hook (rustic-mode . cargo-minor-mode))
 
 ;; C#
 (use-package csharp-mode
@@ -744,8 +790,6 @@ This runs `org-insert-heading' with
   :config
   (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
 
-(use-package cargo
-  :hook (rust-mode . cargo-minor-mode))
 
 ;; Tree Sitter
 (use-package tree-sitter-langs
