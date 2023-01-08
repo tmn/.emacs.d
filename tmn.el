@@ -27,7 +27,6 @@
  auto-save-default nil
  create-lockfiles nil
  indent-tabs-mode nil
- ; line-spacing 2; Commented for now - this only adds bottom padding
  tab-width 2
  make-backup-files nil
  tab-always-indent 'complete)
@@ -193,8 +192,7 @@
   :config
   (projectile-mode +1)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (setq projectile-completion-system 'ivy
-        projectile-require-project-root nil
+  (setq projectile-require-project-root nil
         projectile-mode-line '(:eval (format "[%s]" (projectile-project-name)))
         projectile-cache-file (locate-user-emacs-file ".cache/projectile.cache")
         projectile-known-projects-file (locate-user-emacs-file ".cache/projectile.projects")
@@ -301,9 +299,6 @@
     (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
     (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)))
 
-(use-package lsp-ivy
-  :commands lsp-ivy-workspace-symbol)
-
 (use-package lsp-treemacs
   :bind (("M-p t e" . lsp-treemacs-errors-list)
          ("M-p t r" . lsp-treemacs-references)
@@ -361,7 +356,6 @@
          ("M-8" . winum-select-window-8)
          ("M-9" . winum-select-window-9)))
 
-
 (use-package treemacs-all-the-icons)
 
 (use-package treemacs
@@ -417,59 +411,129 @@
           which-key-idle-delay 0.5)
     (which-key-mode)))
 
-
-(use-package ivy
-  :bind (("C-c C-r" . ivy-resume)
-         ("C-x B" . ivy-switch-buffer-other-window)
-         ("C-x C-b" . ivy-switch-buffer))
-  :init
-  (ivy-mode))
-
-(use-package ivy-rich
-  :after counsel
-  :hook ((ivy-mode . ivy-rich-mode)
-         (counsel-projectile-mode . ivy-rich-mode))
-  :init (ivy-rich-mode 1)
+(use-package marginalia
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
+  ;; :general
+  ;; (:keymaps 'minibuffer-local-map
+  ;;           "M-A" 'marginalia-cycle)
   :custom
-  (ivy-virtual-abbreviate 'full
-                          ivy-rich-switch-buffer-align-virtual-buffer t
-                          ivy-rich-path-style 'abbrev))
-
-(use-package swiper
-  :after ivy
-  :bind (("C-s" . swiper)))
-
-(use-package counsel
+  (marginalia-max-relative-age 0)
+  (marginalia-align 'right)
   :init
-  (setq ivy-use-virtual-buffers t
-        enable-recursive-minibuffers t)
-  :commands (counsel-recentf
-             counsel-find-file
-             counsel-yank-pop)
-  :bind (("C-x C-f" . counsel-find-file)
-         ("C-r" . counsel-recentf)
-         ("M-y" . counsel-yank-pop)
-         ("M-x" . counsel-M-x)
-         ("C-h b" . counsel-descbinds)
-         ("C-h f" . counsel-describe-function)
-         ("C-h v" . counsel-describe-variable)))
+  (marginalia-mode))
 
-(use-package counsel-projectile
-  :commands (counsel-projectile-find-file
-             counsel-projectile-rg)
-  :bind (("C-x C-o" . counsel-projectile-find-file)
-         ("C-x C-p" . counsel-projectile-rg)))
+(use-package vertico
+  :bind (:map vertico-map
+              ("<tab>" . vertico-insert)
+              ("<escape>" . minibuffer-keyboard-quit)
+              ("C-M-n" . vertico-next-group)
+              ("C-M-p" . vertico-previous-group))
+  :init
+  (vertico-mode)
+  :custom
+  (vertico-count 13)
+  (vertico-resize t)
+  (vertico-cycle nil))
+
+(use-package consult
+  :bind (
+         ("C-x C-b" . consult-buffer)
+         ("C-s" . consult-line)))
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :custom
+  (orderless-matching-styles
+   '(orderless-literal
+     orderless-prefixes
+     orderless-initialism
+     orderless-regexp))
+  (orderless-style-dispatchers
+   '(prot-orderless-literal-dispatcher
+     prot-orderless-literal-dispatcher
+     prot-orderless-strict-initialism-dispatcher
+     prot-orderless-flex-dispatcher))
+  :init
+  (defun orderless-strict-initialism (component)
+    "Match a COMPONENT as a strict initialism.
+This means the characters in COMPONENT must occur in the
+candidate in that order at the beginning of subsequent words
+comprised of letters.  Only non-letters can be in between the
+words that start with the initials."
+    (orderless--strict-*-initialism component))
+
+  (defun prot-orderless-literal-dispatcher (pattern _index _total)
+    "Literal style dispatcher using the equals sign as a suffix.
+It matches PATTERN _INDEX and _TOTAL according to how Orderless
+parses its input."
+    (when (string-suffix-p "=" pattern)
+      `(orderless-literal . ,(substring pattern 0 -1))))
+
+  (defun prot-orderless-strict-initialism-dispatcher (pattern _index _total)
+    "Leading initialism  dispatcher using the comma suffix.
+It matches PATTERN _INDEX and _TOTAL according to how Orderless
+parses its input."
+    (when (string-suffix-p "," pattern)
+      `(orderless-strict-initialism . ,(substring pattern 0 -1))))
+
+  (defun prot-orderless-flex-dispatcher (pattern _index _total)
+    "Flex  dispatcher using the tilde suffix.
+It matches PATTERN _INDEX and _TOTAL according to how Orderless
+parses its input."
+    (when (string-suffix-p "." pattern)
+      `(orderless-flex . ,(substring pattern 0 -1))))
+
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
 
 (use-package all-the-icons
   :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el")
   :config
   (setq all-the-icons-scale-factor 0.9))
 
-(use-package all-the-icons-ivy-rich
-  :after ivy-rich
-  :straight t
-  :hook (ivy-mode . all-the-icons-ivy-rich-mode)
-  :init (all-the-icons-ivy-rich-mode 1))
+(use-package all-the-icons-completion
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
 
 (use-package editorconfig
   :init (editorconfig-mode 1))
@@ -482,18 +546,18 @@
   :config
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package forge
-  :after magit)
+;; (use-package forge
+;;   :after magit)
 
-(use-package term
-  :bind (("C-c o t" . term)
-         :map term-mode-map
-         ("M-p" . term-send-up)
-         ("M-n" . term-send-down)
-         :map term-raw-map
-         ("M-o" . other-window)
-         ("M-p" . term-send-up)
-         ("M-n" . term-send-down)))
+;; (use-package term
+;;   :bind (("C-c o t" . term)
+;;          :map term-mode-map
+;;          ("M-p" . term-send-up)
+;;          ("M-n" . term-send-down)
+;;          :map term-raw-map
+;;          ("M-o" . other-window)
+;;          ("M-p" . term-send-up)
+;;          ("M-n" . term-send-down)))
 
 (use-package yasnippet
   :init
@@ -765,7 +829,7 @@ This runs `org-insert-heading' with
 
   ;; comment to disable rustfmt on save
   (add-hook 'rustic-mode-hook 't/rustic-mode-hook)
-)
+  )
 
 (defun t/rustic-mode-hook ()
   ;; so that run C-c C-c C-r works without having to confirm, but don't try to
@@ -781,7 +845,7 @@ This runs `org-insert-heading' with
 (use-package toml-mode :ensure)
 
 (use-package cargo
- :hook (rustic-mode . cargo-minor-mode))
+  :hook (rustic-mode . cargo-minor-mode))
 
 ;; C#
 (use-package csharp-mode
@@ -792,19 +856,19 @@ This runs `org-insert-heading' with
 
 
 ;; Tree Sitter
-(use-package tree-sitter-langs
-  :config
-  (tree-sitter-require 'tsx))
+;; (use-package tree-sitter-langs
+;;   :config
+;;   (tree-sitter-require 'tsx))
 
-(use-package tree-sitter
-  :commands (tree-sitter-mode global-tree-sitter-mode)
-  :init
-  (require 'tree-sitter-langs)
-  (global-tree-sitter-mode)
-  :config
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+;; (use-package tree-sitter
+;;   :commands (tree-sitter-mode global-tree-sitter-mode)
+;;   :init
+;;   (require 'tree-sitter-langs)
+;;   (global-tree-sitter-mode)
+;;   :config
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(use-package tree-sitter-indent)
+;; (use-package tree-sitter-indent)
 
 ;;; Other tools
 
@@ -814,8 +878,6 @@ This runs `org-insert-heading' with
 
 (use-package groovy-mode
   :mode "\\.\\(gradle\\|groovy\\)$")
-
-(use-package cmake-mode)
 
 (use-package bazel-mode
   :straight (bazel-mode :type git :host github :repo "bazelbuild/emacs-bazel-mode")
