@@ -23,7 +23,7 @@
    (t
     (setq t/config-file-loaded-p t)
 
-    (defvar t/minimum-emacs-version "27.1"
+    (defvar t/minimum-emacs-version "28.2"
       "The tmn.el configuration does not support any Emacs version below this.")
 
     (if (version< emacs-version t/minimum-emacs-version)

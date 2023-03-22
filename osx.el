@@ -15,6 +15,10 @@
 
  trash-directory "~/.Trash/emacs")
 
+;; Fix macos titlebar
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+
 (setq dired-use-ls-dired t
       insert-directory-program "/opt/homebrew/bin/gls"
       dired-listing-switches "-aBhl --group-directories-first")

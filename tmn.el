@@ -6,6 +6,12 @@
 ;;; Code:
 
 ;; -----------------------------------------------------------------------------
+;; Default coding system
+;; -----------------------------------------------------------------------------
+(set-default-coding-systems 'utf-8)
+(server-start)
+
+;; -----------------------------------------------------------------------------
 ;; Load OS specific settings
 ;; -----------------------------------------------------------------------------
 
@@ -30,8 +36,6 @@
  tab-width 2
  make-backup-files nil
  tab-always-indent 'complete)
-
-(setq native-comp-async-report-warnings-errors nil)
 
 (column-number-mode t)
 (global-hl-line-mode 1)
@@ -62,10 +66,19 @@
 (toggle-scroll-bar -1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
+(tooltip-mode -1)
+(set-fringe-mode 10)
 
-;; Fix macos titlebar
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
+(setq visible-bell t)
+
+(set-frame-parameter (selected-frame) 'alpha '(98 . 98))
+(add-to-list 'default-frame-alist '(alpha . (98 . 98)))
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+
+;; Follow symlinks
+(setq vc-follow-symlinks t)
 
 
 ;; -----------------------------------------------------------------------------
@@ -121,14 +134,13 @@
 (show-paren-mode 1)
 (setq show-paren-delay 0)
 
-(global-set-key "%" 'match-paren)
-
 (defun match-paren (arg)
-  "Go to the matching paren if on a paren; otherwise insert %."
+  "Go to the matching paren using ARG if on a paren; otherwise insert ARG."
   (interactive "p")
   (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
         ((looking-at "\\s)") (forward-char 1) (backward-list 1))
         (t (self-insert-command (or arg 1)))))
+(global-set-key "%" 'match-paren)
 
 
 ;; -----------------------------------------------------------------------------
@@ -143,7 +155,8 @@
 
 ;; Trim spaces from end of line on save
 (use-package ws-butler
-  :hook (prog-mode . ws-butler-mode))
+  :hook ((text-mode . ws-butler-mode)
+         (prog-mode . ws-butler-mode)))
 
 (use-package doom-themes
   :init
@@ -169,6 +182,9 @@
         doom-modeline-buffer-encoding nil
         doom-modeline-indent-info nil
         doom-modeline-env-version t))
+
+(use-package emojify
+  :commands (emojify-mode))
 
 (use-package expand-region
   :bind (("C-=" . er/expand-region)
@@ -203,39 +219,39 @@
         projectile-globally-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
         grep-find-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
 
-(use-package company
-  :commands company-mode
-  :hook (prog-mode . company-mode)
+(use-package corfu
+  :straight (corfu :type git :host github :repo "minad/corfu")
   :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.15)
-  (company-tooltip-align-annotations t)
-  (company-tooltip-flip-when-above t)
-  (company-show-numbers t)
-  (company-selection-wrap-around t)
-  (company-require-match nil)
+  (corfu-cycle t)
+  ;; (corfu-auto t)
   :config
-  (global-company-mode 1))
+  (global-corfu-mode))
+
 
 (use-package lsp-mode
   :commands lsp
-  :init (setq lsp-keymap-prefix "C-c C-l")
+  :init
+  (setq lsp-keymap-prefix "C-c C-l")
+  (defun t/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))) ;; Configure orderless
   :bind ("M-RET" . lsp-execute-code-action)
   :custom
   (lsp-print-io nil)
   (lsp-auto-configure t)
   (lsp-enable-snippet t)
-  (lsp-completion-provider :capf)
+  ;; (lsp-completion-provider :capf)
+  (lsp-completion-provider :none)
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-idle-delay 0.5)
 
-  ;; what to use when checking on-save. "check" is default, I prefer clippy
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
+
   (lsp-eldoc-render-all t)
   (lsp-idle-delay 0.6)
   ;; This controls the overlays that display type and other hints inline. Enable
   ;; / disable as you prefer. Well require a `lsp-workspace-restart' to have an
   ;; effect on open projects.
+  (lsp-rust-analyzer-cargo-watch-command "clippy")
   (lsp-rust-analyzer-server-display-inlay-hints t)
   (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
   (lsp-rust-analyzer-display-chaining-hints t)
@@ -257,6 +273,7 @@
                          "[/\\\\].DS_Store"))
     (push directories lsp-file-watch-ignored))
   :hook (
+         (lsp-completion-mode . t/lsp-mode-setup-completion)
          ((c-mode
            c++-mode
            dart-mode
@@ -267,6 +284,7 @@
            swift-mode
            typescript-mode
            tsx-mode
+           python-mode
            web-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
@@ -306,11 +324,6 @@
   :config
   (progn (lsp-treemacs-sync-mode 1)))
 
-(use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp))))
 
 (use-package dap-mode
   :config
@@ -399,7 +412,6 @@
 (use-package treemacs-magit
   :after (treemacs magit))
 
-
 (use-package which-key
   :demand t
   :config
@@ -414,9 +426,6 @@
 (use-package marginalia
   :bind (:map minibuffer-local-map
               ("M-A" . marginalia-cycle))
-  ;; :general
-  ;; (:keymaps 'minibuffer-local-map
-  ;;           "M-A" 'marginalia-cycle)
   :custom
   (marginalia-max-relative-age 0)
   (marginalia-align 'right)
@@ -424,69 +433,183 @@
   (marginalia-mode))
 
 (use-package vertico
+  :demand t                             ; Otherwise won't get loaded immediately
+  :straight (vertico :files (:defaults "extensions/*") ; Special recipe to load extensions conveniently
+                     :includes (vertico-indexed
+                                vertico-flat
+                                vertico-grid
+                                vertico-mouse
+                                vertico-quick
+                                vertico-buffer
+                                vertico-repeat
+                                vertico-reverse
+                                vertico-directory
+                                vertico-multiform
+                                vertico-unobtrusive
+                                ))
   :bind (:map vertico-map
               ("<tab>" . vertico-insert)
               ("<escape>" . minibuffer-keyboard-quit)
+              ("?" . minibuffer-completion-help)
               ("C-M-n" . vertico-next-group)
-              ("C-M-p" . vertico-previous-group))
-  :init
-  (vertico-mode)
+              ("C-M-p" . vertico-previous-group)
+              ("<backspace>" . vertico-directory-delete-char)
+              ("C-w" . vertico-directory-delete-word)
+              ("C-<backspace>" . vertico-directory-delete-word)
+              ; ("RET" . vertico-dirrectory-enter)
+              ("C-i" . vertico-quick-insert)
+              ("C-o" . vertico-quick-exit)
+              ("M-o" . kb/vertico-quick-embark)
+              ("M-G" . vertico-multiform-grid)
+              ("M-F" . vertico-multiform-flat)
+              ("M-R" . vertico-multiform-reverse)
+              ("M-U" . vertico-multiform-unobtrusive)
+              ("C-l" . kb/vertico-multiform-flat-toggle))
+  :hook ((rfn-eshadow-update-overlay . vertico-directory-tidy) ; Clean up file path when typing
+         (minibuffer-setup . vertico-repeat-save) ; Make sure vertico state is saved
+         )
   :custom
   (vertico-count 13)
   (vertico-resize t)
-  (vertico-cycle nil))
+  (vertico-cycle nil)
+  ;; Extensions
+  (vertico-grid-separator "       ")
+  (vertico-grid-lookahead 50)
+  (vertico-buffer-display-action '(display-buffer-reuse-window))
+  (vertico-multiform-categories
+   '((file reverse)
+     (consult-grep buffer)
+     (consult-location)
+     (imenu buffer)
+     (library reverse indexed)
+     (org-roam-node reverse indexed)
+     (t reverse)
+     ))
+  (vertico-multiform-commands
+   '(("flyspell-correct-*" grid reverse)
+     (org-refile grid reverse indexed)
+     (consult-yank-pop indexed)
+     (consult-flycheck)
+     (consult-lsp-diagnostics)
+     ))
+  :init
+  (defun kb/vertico-multiform-flat-toggle ()
+    "Toggle between flat and reverse."
+    (interactive)
+    (vertico-multiform--display-toggle 'vertico-flat-mode)
+    (if vertico-flat-mode
+        (vertico-multiform--temporary-mode 'vertico-reverse-mode -1)
+      (vertico-multiform--temporary-mode 'vertico-reverse-mode 1)))
+  (defun kb/vertico-quick-embark (&optional arg)
+    "Embark on candidate using quick keys."
+    (interactive)
+    (when (vertico-quick-jump)
+      (embark-act arg)))
+
+  ;; Workaround for problem with `tramp' hostname completions. This overrides
+  ;; the completion style specifically for remote files! See
+  ;; https://github.com/minad/vertico#tramp-hostname-completion
+  (defun kb/basic-remote-try-completion (string table pred point)
+    (and (vertico--remote-p string)
+         (completion-basic-try-completion string table pred point)))
+  (defun kb/basic-remote-all-completions (string table pred point)
+    (and (vertico--remote-p string)
+         (completion-basic-all-completions string table pred point)))
+  (add-to-list 'completion-styles-alist
+               '(basic-remote           ; Name of `completion-style'
+                 kb/basic-remote-try-completion kb/basic-remote-all-completions nil))
+  :config
+  (vertico-mode)
+  ;; Extensions
+  (vertico-multiform-mode)
+
+  ;; Prefix the current candidate with “» ”. From
+  ;; https://github.com/minad/vertico/wiki#prefix-current-candidate-with-arrow
+  (advice-add #'vertico--format-candidate :around
+                                          (lambda (orig cand prefix suffix index _start)
+                                            (setq cand (funcall orig cand prefix suffix index _start))
+                                            (concat
+                                             (if (= vertico--index index)
+                                                 (propertize "» " 'face 'vertico-current)
+                                               "  ")
+                                             cand))))
+
+
+(defun t/get-project-root ()
+  "Get project root"
+  (when (fboundp 'projectile-project-root)
+    (projectile-project-root)))
 
 (use-package consult
   :bind (
          ("C-x C-b" . consult-buffer)
-         ("C-s" . consult-line)))
+         ("C-s" . consult-line)
+         ("C-M-l" . consult-imenu)
+         :map minibuffer-local-map
+         ("C-r" . consult-history))
+  :custom
+  (consult-project-root-function #'t/get-project-root)
+  (completion-in-region-function #'consult-completion-in-region)
+  :config
+  (consult-preview-at-point-mode))
+
+(use-package consult-projectile
+  :after consult
+  :bind (("C-x C-o" . consult-projectile-find-file)))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
-  :init
-  (savehist-mode))
+  :config
+  (setq history-length 25)
+  (savehist-mode 1))
 
-;; A few more useful configurations...
-(use-package emacs
-  :init
-  ;; Add prompt indicator to `completing-read-multiple'.
-  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
-  (defun crm-indicator (args)
-    (cons (format "[CRM%s] %s"
-                  (replace-regexp-in-string
-                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-                   crm-separator)
-                  (car args))
-          (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-  ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-
-  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-  ;; Vertico commands are hidden in normal buffers.
-  ;; (setq read-extended-command-predicate
-  ;;       #'command-completion-default-include-p)
-
-  ;; Enable recursive minibuffers
-  (setq enable-recursive-minibuffers t))
-
-;; Optionally use the `orderless' completion style.
 (use-package orderless
   :custom
+  (completion-styles '(orderless))
+  (completion-category-defaults nil)    ; I want to be in control!
+  (completion-category-overrides
+   '((file (styles basic-remote ; For `tramp' hostname completion with `vertico'
+                   orderless
+                   ))
+     ))
+
+  (orderless-component-separator 'orderless-escapable-split-on-space)
   (orderless-matching-styles
    '(orderless-literal
      orderless-prefixes
      orderless-initialism
-     orderless-regexp))
+     orderless-regexp
+     ;; orderless-flex
+     ;; orderless-strict-leading-initialism
+     ;; orderless-strict-initialism
+     ;; orderless-strict-full-initialism
+     ;; orderless-without-literal          ; Recommended for dispatches instead
+     ))
   (orderless-style-dispatchers
    '(prot-orderless-literal-dispatcher
-     prot-orderless-literal-dispatcher
      prot-orderless-strict-initialism-dispatcher
-     prot-orderless-flex-dispatcher))
+     prot-orderless-flex-dispatcher
+     ))
   :init
+  (defun orderless--strict-*-initialism (component &optional anchored)
+    "Match a COMPONENT as a strict initialism, optionally ANCHORED.
+The characters in COMPONENT must occur in the candidate in that
+order at the beginning of subsequent words comprised of letters.
+Only non-letters can be in between the words that start with the
+initials.
+
+If ANCHORED is `start' require that the first initial appear in
+the first word of the candidate.  If ANCHORED is `both' require
+that the first and last initials appear in the first and last
+words of the candidate, respectively."
+    (orderless--separated-by
+        '(seq (zero-or-more alpha) word-end (zero-or-more (not alpha)))
+      (cl-loop for char across component collect `(seq word-start ,char))
+      (when anchored '(seq (group buffer-start) (zero-or-more (not alpha))))
+      (when (eq anchored 'both)
+        '(seq (zero-or-more alpha) word-end (zero-or-more (not alpha)) eol))))
+
   (defun orderless-strict-initialism (component)
     "Match a COMPONENT as a strict initialism.
 This means the characters in COMPONENT must occur in the
@@ -514,15 +637,7 @@ parses its input."
 It matches PATTERN _INDEX and _TOTAL according to how Orderless
 parses its input."
     (when (string-suffix-p "." pattern)
-      `(orderless-flex . ,(substring pattern 0 -1))))
-
-  ;; Configure a custom style dispatcher (see the Consult wiki)
-  ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
-  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
-
+      `(orderless-flex . ,(substring pattern 0 -1)))))
 
 (use-package all-the-icons
   :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el")
@@ -549,15 +664,6 @@ parses its input."
 ;; (use-package forge
 ;;   :after magit)
 
-;; (use-package term
-;;   :bind (("C-c o t" . term)
-;;          :map term-mode-map
-;;          ("M-p" . term-send-up)
-;;          ("M-n" . term-send-down)
-;;          :map term-raw-map
-;;          ("M-o" . other-window)
-;;          ("M-p" . term-send-up)
-;;          ("M-n" . term-send-down)))
 
 (use-package yasnippet
   :init
@@ -569,7 +675,16 @@ parses its input."
   :after lsp-mode)
 
 ;; run app from desktop without emulator
-(use-package hover)
+;; (use-package hover)
+
+;;(use-package minimap
+;;  :commands (minimap-mode)
+;;  :bind (("C-c o  m" . minimap-mode))
+;;  :init
+;;  (setq minimap-window-location 'right
+;;        minimap-minimum-width 15
+;;        minimap-hide-fringes nil
+;;        minimap-width-fraction 0.13))
 
 ;; Package `java`
 (use-package lsp-java
@@ -621,6 +736,24 @@ parses its input."
   :after js2-mode
   :hook ((js2-mode . js2-refactor-mode)))
 
+(use-package nodejs-repl
+  :config
+  (add-hook 'js2-mode-hook
+            (lambda ()
+              (define-key js-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
+              (define-key js-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
+              (define-key js-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
+              (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
+              (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
+              (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
+
+(use-package prettier-js
+  :commands prettier-js-mode
+  :hook ((typescript-mode
+          tsx-mode
+          json-mode
+          web-mode) . prettier-js-mode))
+
 (use-package typescript-mode
   :mode "\\.\\(ts\\|tsx\\)$"
   :init
@@ -656,28 +789,8 @@ parses its input."
   (setq web-mode-enable-auto-closing t
         web-mode-enable-auto-pairing t))
 
-(use-package prettier-js
-  :commands prettier-js-mode
-  :hook ((typescript-mode
-          tsx-mode
-          json-mode
-          web-mode) . prettier-js-mode))
-
-(use-package nodejs-repl
-  :config
-  (add-hook 'js2-mode-hook
-            (lambda ()
-              (define-key js-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
-              (define-key js-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
-              (define-key js-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
-              (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
-              (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
-              (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
-
 (use-package json-mode
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
-
-(use-package restclient)
 
 (use-package json-reformat
   :commands json-reformat
@@ -689,12 +802,34 @@ parses its input."
 (use-package mustache-mode
   :mode "\\.mustache$")
 
+;; Python
 (use-package python-mode
   :hook
   (python-mode . flycheck-mode)
-  (python-mode . company-mode)
   :custom
   (python-shell-interpreter "python3"))
+
+(use-package lsp-pyright
+  :after (python-mode)
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp))))
+
+;; Tree Sitter
+(use-package tree-sitter
+  :after (tree-sitter-langs)
+  :commands (tree-sitter-mode global-tree-sitter-mode)
+  :init
+  (require 'tree-sitter-langs)
+  (global-tree-sitter-mode)
+  :config
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(use-package tree-sitter-langs
+  :config
+  (tree-sitter-require 'tsx))
+
+(use-package tree-sitter-indent)
 
 (use-package tsi
   :commands (tsi-typescript-mode)
@@ -702,15 +837,32 @@ parses its input."
   :mode (("\\.tsx$" . tsi-typescript-mode)))
 
 (use-package origami
-  :straight (origami :type git :host github :repo "gregsexton/origami.el"))
+  :straight (origami :type git :host github :repo "gregsexton/origami.el")
+  :hook ((yaml-mode . origami-mode)))
+
+(use-package overlay
+  :straight (overlay :type git :host github :repo "twada/coverlay.el"))
+
+(use-package graphql-mode)
 
 (use-package tsx-mode
   :straight (tsx-mode :type git :host github :repo "orzechowskid/tsx-mode.el")
   :mode (("\\.tsx$" . tsx-mode)))
 
+
 ;; Package org-mode
+
+(defun t/org-mode-setup ()
+  "..."
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (auto-fill-mode 0)
+  (visual-line-mode 1)
+  (diminish org-indent-mode))
+
 (use-package org
   :straight (org-plus-contrib :type git :repo "https://git.sr.ht/~bzg/org-contrib")
+  :hook (org-mode . t/org-mode-setup)
   :bind (:map org-mode-map
               ;; Prevent Org from overriding the bindings for
               ;; windmove. By default, these keys are mapped to
@@ -792,23 +944,23 @@ This runs `org-insert-heading' with
 
 
 ;; Qt
-(use-package qml-mode
-  :mode "\\.qml$"
-  :config
-  (setq tab-width 4
-        qml-indent-width 4))
+;; (use-package qml-mode
+;;   :mode "\\.qml$"
+;;   :config
+;;   (setq tab-width 4
+;;         qml-indent-width 4))
 
 ;; Swift
+(use-package swift-mode
+  :after lsp-mode)
+
 (use-package lsp-sourcekit
   :after lsp-mode
   :config
   (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
 
-(use-package swift-mode
-  :after lsp-mode)
-
+;; Rust
 (use-package rustic
-  :ensure
   :bind (:map rustic-mode-map
               ("M-j" . lsp-ui-imenu)
               ("M-?" . lsp-find-references)
@@ -828,8 +980,7 @@ This runs `org-insert-heading' with
   ;; (setq lsp-signature-auto-activate nil)
 
   ;; comment to disable rustfmt on save
-  (add-hook 'rustic-mode-hook 't/rustic-mode-hook)
-  )
+  (add-hook 'rustic-mode-hook 't/rustic-mode-hook))
 
 (defun t/rustic-mode-hook ()
   ;; so that run C-c C-c C-r works without having to confirm, but don't try to
@@ -840,41 +991,20 @@ This runs `org-insert-heading' with
     (setq-local buffer-save-without-query t))
   (add-hook 'before-save-hook 'lsp-format-buffer nil t))
 
-(use-package rust-playground :ensure)
+(use-package rust-playground)
 
-(use-package toml-mode :ensure)
+(use-package toml-mode)
 
 (use-package cargo
   :hook (rustic-mode . cargo-minor-mode))
 
-;; C#
 (use-package csharp-mode
   :commands (csharp-tree-sitter-mode)
   :mode "\\.cs$"
   :config
   (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-tree-sitter-mode)))
 
-
-;; Tree Sitter
-;; (use-package tree-sitter-langs
-;;   :config
-;;   (tree-sitter-require 'tsx))
-
-;; (use-package tree-sitter
-;;   :commands (tree-sitter-mode global-tree-sitter-mode)
-;;   :init
-;;   (require 'tree-sitter-langs)
-;;   (global-tree-sitter-mode)
-;;   :config
-;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-;; (use-package tree-sitter-indent)
-
-;;; Other tools
-
 (use-package yaml-mode)
-
-(use-package cmake-mode)
 
 (use-package groovy-mode
   :mode "\\.\\(gradle\\|groovy\\)$")
@@ -886,13 +1016,11 @@ This runs `org-insert-heading' with
 (use-package protobuf-mode
   :mode "\\.proto$")
 
-(use-package minimap
-  :commands (minimap-mode)
-  :bind (("C-c o  m" . minimap-mode))
-  :init
-  (setq minimap-window-location 'right
-        minimap-minimum-width 15
-        minimap-hide-fringes nil
-        minimap-width-fraction 0.13))
+;;; Other tools
+
+(use-package cmake-mode)
+
+(use-package restclient)
+
 
 ;;; tmn.el ends here

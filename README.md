@@ -9,7 +9,7 @@ This emacs configuration is tested in emacs 27.1 on macOS.
 
 Clone this into your home folder as `.emacs.d`. Rember to backup your old `.emacs.d` if you already have one:
 
-```
+```bash
 git clone https://github.com/tmn/.emacs.d.git ~/.emacs.d
 ```
 
@@ -18,7 +18,7 @@ git clone https://github.com/tmn/.emacs.d.git ~/.emacs.d
 
 Whatever port of emacs would do. I prefer the pure one using cask:
 
-```
+```bash
 brew install --cask emacs
 ```
 
@@ -26,6 +26,7 @@ brew install --cask emacs
 ## Dependencies
 
 This emacs configuration depends on a few packages installed outside of emacs.
+
 
 ### OS Dependencies
 
@@ -40,10 +41,11 @@ Install system dependencies for some of the emacs packages:
 I.e. using brew:
 
 ```bash
-brew install ripgrep ctags node openjdk@11 coreutils librsvg
+brew install ripgrep ctags node openjdk@11 coreutils librsvg pyright
 ```
 
 > Rember to add Java to `PATH`.
+
 
 ### Other dependencies
 
