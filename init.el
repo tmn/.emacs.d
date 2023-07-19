@@ -7,6 +7,12 @@
 
 ;;; Code:
 
+;; -----------------------------------------------------------------------------
+;; Default coding system
+;; -----------------------------------------------------------------------------
+(set-default-coding-systems 'utf-8)
+(server-start)
+
 (let ((alternative-user-emacs-directory (getenv "USER_EMACS_DIRECTORY")))
   (defvar t/config-file-loaded-p nil)
 
@@ -31,6 +37,36 @@
                        "this config requires v%s or higher")
                t/minimum-emacs-version)
 
+      ;; -----------------------------------------------------------------------------
+      ;; Load OS specific settings
+      ;; -----------------------------------------------------------------------------
+      (when (eq system-type 'darwin)
+        (let ((t/lib-file (concat user-emacs-directory "osx.el")))
+          (unless (file-exists-p t/lib-file)
+            (error "No file found: %s" t/lib-file))
+          (load (expand-file-name "osx.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
+
+      (when (eq system-type 'windows-nt)
+        (let ((t/lib-file (concat user-emacs-directory "osx.el")))
+          (unless (file-exists-p t/lib-file)
+            (error "No file found: %s" t/lib-file))
+          (load (expand-file-name "windows.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
+
+      (when (eq system-type 'gnu/linux)
+        (let ((t/lib-file (concat user-emacs-directory "osx.el")))
+          (unless (file-exists-p t/lib-file)
+            (error "No file found: %s" t/lib-file))
+          (load (expand-file-name "linux.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
+
+      ;; (when (eq system-type 'windows-nt)
+      ;;   (load (expand-file-name "windows.el" user-emacs-directory) nil 'nomessage 'nosuffix))
+
+      ;; (when (eq system-type 'gnu/linux)
+      ;;   (load (expand-file-name "linux.el" user-emacs-directory) nil 'nomessage 'nosuffix))
+
+      ;; -----------------------------------------------------------------------------
+      ;; Load THE config
+      ;; -----------------------------------------------------------------------------
       (let ((t/lib-file (concat user-emacs-directory "tmn.el")))
         (unless (file-exists-p t/lib-file)
           (error "No file found: %s" t/lib-file))

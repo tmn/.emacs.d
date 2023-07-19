@@ -7,7 +7,7 @@
 
 
 ;; Reduce GC frequency
-(let ((normal-gc-cons-threshold (* 50 1024 1024))
+(let ((normal-gc-cons-threshold (* 64 1024 1024))
       (init-gc-cons-threshold (* 128 1024 1024))
       (normal-read-process-output-max (* 1024 1024)))
   (setq read-process-output-max normal-read-process-output-max)
@@ -27,6 +27,7 @@
 
 ;;; Bootstrap straight.el
 (defvar bootstrap-version)
+
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 6))

@@ -6,26 +6,6 @@
 ;;; Code:
 
 ;; -----------------------------------------------------------------------------
-;; Default coding system
-;; -----------------------------------------------------------------------------
-(set-default-coding-systems 'utf-8)
-(server-start)
-
-;; -----------------------------------------------------------------------------
-;; Load OS specific settings
-;; -----------------------------------------------------------------------------
-
-(when (eq system-type 'darwin)
-  (load (expand-file-name "osx.el" user-emacs-directory)))
-
-(when (eq system-type 'windows-nt)
-  (load (expand-file-name "windows.el" user-emacs-directory)))
-
-(when (eq system-type 'gnu/linux)
-  (load (expand-file-name "linux.el" user-emacs-directory)))
-
-
-;; -----------------------------------------------------------------------------
 ;; Some basic configs
 ;; -----------------------------------------------------------------------------
 
@@ -71,8 +51,8 @@
 
 (setq visible-bell t)
 
-(set-frame-parameter (selected-frame) 'alpha '(98 . 98))
-(add-to-list 'default-frame-alist '(alpha . (98 . 98)))
+;; (set-frame-parameter (selected-frame) 'alpha '(98 . 98))
+;; (add-to-list 'default-frame-alist '(alpha . (98 . 98)))
 (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -150,6 +130,8 @@
 ;; String helpers
 (use-package s)
 
+(use-package diminish)
+
 (use-package rg
   :commands rg)
 
@@ -161,7 +143,8 @@
 (use-package doom-themes
   :init
   ; (load-theme 'doom-vibrant t)
-  (load-theme 'doom-opera-light t)
+  ; (load-theme 'doom-opera-light t)
+  (load-theme 'modus-operandi t)
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -225,7 +208,6 @@
   (corfu-auto t)
   :config
   (global-corfu-mode))
-
 
 (use-package lsp-mode
   :commands lsp
@@ -316,13 +298,6 @@
     (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
     (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)))
 
-(use-package lsp-treemacs
-  :bind (("M-p t e" . lsp-treemacs-errors-list)
-         ("M-p t r" . lsp-treemacs-references)
-         ("M-p t s" . lsp-treemacs-symbols))
-  :config
-  (progn (lsp-treemacs-sync-mode 1)))
-
 
 (use-package dap-mode
   :config
@@ -368,48 +343,138 @@
          ("M-8" . winum-select-window-8)
          ("M-9" . winum-select-window-9)))
 
-(use-package treemacs-all-the-icons)
 
-(use-package treemacs
-  :commands (treemacs-follow-mode
-             treemacs-filewatch-mode
-             treemacs-load-theme)
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  (setq treemacs-follow-after-init t
-        treemacs-is-never-other-window t
-        treemacs-sorting 'alphabetic-case-insensitive-asc
-        treemacs-persist-file "~/.emacs.d/.cache/treemacs-persist"
-        treemacs-last-error-persist-file "~/.emacs.d/.cache/treemacs-last-error-persist")
-  :bind (("M-0"       . treemacs-select-window)
-         ("C-x t 1"   . treemacs-delete-other-windows)
-         ("C-c t t"   . treemacs)
-         ("C-c t B"   . treemacs-bookmarks)
-         ("C-c t C-t" . treemacs-find-file)
-         ("C-c t M-t" . treemacs-find-tag))
+;;
+;; Window stuff
+;;
+
+(defun t/org-mode-visual-fill ()
+  (setq visual-fill-column-width 110
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :defer t
+  :hook (org-mode . t/org-mode-visual-fill))
+
+
+;; (use-package treemacs-all-the-icons)
+
+;; (use-package treemacs
+;;   :commands (treemacs-follow-mode
+;;              treemacs-filewatch-mode
+;;              treemacs-load-theme)
+;;   :init
+;;   (with-eval-after-load 'winum
+;;     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+;;   (setq treemacs-follow-after-init t
+;;         treemacs-is-never-other-window t
+;;         treemacs-sorting 'alphabetic-case-insensitive-asc
+;;         treemacs-persist-file "~/.emacs.d/.cache/treemacs-persist"
+;;         treemacs-last-error-persist-file "~/.emacs.d/.cache/treemacs-last-error-persist")
+;;   :bind (("M-0"       . treemacs-select-window)
+;;          ("C-x t 1"   . treemacs-delete-other-windows)
+;;          ("C-c t t"   . treemacs)
+;;          ("C-c t B"   . treemacs-bookmarks)
+;;          ("C-c t C-t" . treemacs-find-file)
+;;          ("C-c t M-t" . treemacs-find-tag))
+;;   :config
+;;   (treemacs-follow-mode -1)
+;;   (require 'treemacs-all-the-icons)
+;;   (treemacs-load-theme "all-the-icons")
+;;   (setq treemacs-project-follow-mode t)
+;;   (treemacs-filewatch-mode t)
+
+;;   :custom
+;;   (treemacs-space-between-root-nodes nil)
+;;   (treemacs-fringe-indicator-mode nil)
+;;   (treemacs-indentation 2))
+
+;; (use-package treemacs-projectile
+;;   :after (treemacs projectile))
+
+;; (use-package treemacs-icons-dired
+;;   :after (treemacs dired)
+;;   :config
+;;   (treemacs-icons-dired-mode))
+
+;; (use-package treemacs-magit
+;;   :after (treemacs magit))
+
+(use-package all-the-icons-dired)
+
+(use-package dired
+  :straight nil
+  :ensure nil
+  :defer 1
+  :commands (dired dired-jump)
   :config
-  (treemacs-follow-mode -1)
-  (require 'treemacs-all-the-icons)
-  (treemacs-load-theme "all-the-icons")
-  (setq treemacs-project-follow-mode t)
-  (treemacs-filewatch-mode t)
+  (setq dired-listing-switches "-agho --group-directories-first"
+        dired-omit-files "^\\.[^.].*"
+        dired-omit-verbose nil
+        dired-hide-details-hide-symlink-targets nil
+        delete-by-moving-to-trash t)
 
-  :custom
-  (treemacs-space-between-root-nodes nil)
-  (treemacs-fringe-indicator-mode nil)
-  (treemacs-indentation 2))
+  (autoload 'dired-omit-mode "dired-x")
 
-(use-package treemacs-projectile
-  :after (treemacs projectile))
+  (add-hook 'dired-load-hook
+            (lambda ()
+              (interactive)
+              (dired-collapse)))
 
-(use-package treemacs-icons-dired
-  :after (treemacs dired)
-  :config
-  (treemacs-icons-dired-mode))
+  (add-hook 'dired-mode-hook
+            (lambda ()
+              (interactive)
+              (dired-omit-mode 1)
+              (dired-hide-details-mode 1)
+              ;; (unless (or dw/is-termux
+              ;;             (s-equals? "/gnu/store/" (expand-file-name default-directory)))
+              ;;   (all-the-icons-dired-mode 1))
+              (all-the-icons-dired-mode 1)
+              (hl-line-mode 1)))
 
-(use-package treemacs-magit
-  :after (treemacs magit))
+  (use-package dired-rainbow
+    :defer 2
+    :config
+    (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
+    (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
+    (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
+    (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
+    (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
+    (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
+    (dired-rainbow-define media "#de751f" ("mp3" "mp4" "mkv" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
+    (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
+    (dired-rainbow-define log "#c17d11" ("log"))
+    (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
+    (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
+    (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
+    (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
+    (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
+    (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
+    (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
+    (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
+    (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
+    (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
+    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*"))
+
+  (use-package dired-single
+    :straight (dired-single :type git :host github :repo "emacsmirror/dired-single")
+    :defer t)
+
+  (use-package dired-ranger
+    :defer t)
+
+  (use-package dired-collapse
+    :defer t)
+
+  :bind (:map dired-mode-map
+              ("h" . dired-single-up-directory)
+              ("H" . dired-omit-mode)
+              ("l" . dired-single-buffer)
+              ("y" . dired-ranger-copy)
+              ("X" . dired-ranger-move)
+              ("p" . dired-ranger-paste)))
+
 
 (use-package which-key
   :demand t
@@ -544,8 +609,11 @@
          ("C-x C-b" . consult-buffer)
          ("C-s" . consult-line)
          ("C-M-l" . consult-imenu)
+         ("C-x C-p" . consult-ripgrep)
          :map minibuffer-local-map
          ("C-r" . consult-history))
+
+
   :custom
   (consult-project-root-function #'t/get-project-root)
   (completion-in-region-function #'consult-completion-in-region)
@@ -814,10 +882,13 @@ parses its input."
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
 (use-package tree-sitter-langs
+  :straight (tree-sitter-langs :type git :host github :repo "emacsmirror/tree-sitter-langs")
   :config
   (tree-sitter-require 'tsx))
 
-(use-package tree-sitter-indent)
+(use-package tree-sitter-indent
+  :straight (tree-sitter-indent :type git :host github :repo "emacsmirror/tree-sitter-indent"))
+
 
 (use-package tsi
   :commands (tsi-typescript-mode)
@@ -851,6 +922,11 @@ parses its input."
 (use-package org
   :straight (:type built-in)
   :hook (org-mode . t/org-mode-setup)
+  :bind (:map org-mode-map
+              ("C-j" . org-next-visible-heading)
+              ("C-k" . org-previous-visible-heading)
+              ("M-j" . org-metadown)
+              ("M-k" . org-metaup))
   :config
   (setq org-ellipsis " ▾"
         org-hide-emphasis-markers t
@@ -937,6 +1013,11 @@ parses its input."
 (use-package org-make-toc
   :hook (org-mode . org-make-toc-mode))
 
+(use-package org-ai
+  :hook (org-mode . org-ai-mode)
+  :custom
+  (org-ai-openai-api-token "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"))
+
 (use-package rst
   :mode (("\\.txt$" . rst-mode)
          ("\\.rst$" . rst-mode)
@@ -983,10 +1064,10 @@ parses its input."
   (add-hook 'rustic-mode-hook 't/rustic-mode-hook))
 
 (defun t/rustic-mode-hook ()
-  ;; so that run C-c C-c C-r works without having to confirm, but don't try to
-  ;; save rust buffers that are not file visiting. Once
-  ;; https://github.com/brotzeit/rustic/issues/253 has been resolved this should
-  ;; no longer be necessary.
+  "So that run C-c C-c C-r works without having to confirm, but don't try to
+save rust buffers that are not file visiting. Once
+ https://github.com/brotzeit/rustic/issues/253 has been resolved this should
+ no longer be necessary."
   (when buffer-file-name
     (setq-local buffer-save-without-query t))
   (add-hook 'before-save-hook 'lsp-format-buffer nil t))
@@ -1022,5 +1103,24 @@ parses its input."
 
 (use-package restclient)
 
+
+;; (defun t/call-openapi-language-model (text)
+;;   "Calls the OpenAPI Language Model API with the given text and returns the response."
+;;   (let* ((api-key "LOL")
+;;          (url (concat "https://api.openai.com/v1/chat/completions"))
+;;          (payload `(:prompt ,text
+;;                      :temperature 0.5
+;;                      :max-tokens 100)))
+;;     (with-current-buffer
+;;         (url-retrieve-synchronously url
+;;                                     `(("Content-Type" . "application/json")
+;;                                       ("Authorization" . ,(concat "Bearer " api-key))))
+;;       (goto-char (point-min))
+;;       (search-forward-regexp "\n\n")
+;;       (let ((response (buffer-substring-no-properties (point) (point-max))))
+;;         (let (test json-read-from-string response)
+;;           (message test))))))
+
+;; (t/call-openapi-language-model "asdf")
 
 ;;; tmn.el ends here
