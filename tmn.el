@@ -1,9 +1,17 @@
 ;;; tmn.el --- tmn.el configuration -*- lexical-binding: t -*-
-
 ;;; Commentary:
 ;; The tmn.el configuration.
 
 ;;; Code:
+
+
+;; -----------------------------------------------------------------------------
+;; System Workaround for emacs version <29.x
+;; -----------------------------------------------------------------------------
+
+(if (version< emacs-version "29")
+  (setq image-types (cons 'svg image-types)))
+
 
 ;; -----------------------------------------------------------------------------
 ;; Some basic configs
