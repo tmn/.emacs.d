@@ -423,23 +423,24 @@
         dired-hide-details-hide-symlink-targets nil
         delete-by-moving-to-trash t)
 
+  (defun t/dired-load ()
+    "Dired load func."
+    (interactive)
+    (dired-collapse))
+
+  (defun t/dired-mode ()
+    "Dired mode func."
+    (interactive)
+    (dired-omit-mode 0)
+    (dired-hide-details-mode 1)
+    (all-the-icons-dired-mode 1)
+    (hl-line-mode 1))
+
   (autoload 'dired-omit-mode "dired-x")
 
-  (add-hook 'dired-load-hook
-            (lambda ()
-              (interactive)
-              (dired-collapse)))
+  (add-hook 'dired-load-hook 't/dired-load)
+  (add-hook 'dired-mode-hook 't/dired-mode)
 
-  (add-hook 'dired-mode-hook
-            (lambda ()
-              (interactive)
-              (dired-omit-mode 1)
-              (dired-hide-details-mode 1)
-              ;; (unless (or dw/is-termux
-              ;;             (s-equals? "/gnu/store/" (expand-file-name default-directory)))
-              ;;   (all-the-icons-dired-mode 1))
-              (all-the-icons-dired-mode 1)
-              (hl-line-mode 1)))
 
   (use-package dired-rainbow
     :defer 2
@@ -475,7 +476,40 @@
   (use-package dired-collapse
     :defer t)
 
+  (use-package dired-subtree
+    :defer t)
+
+  (use-package dired-sidebar
+    :defer t
+    :commands (dired-sidebar-toggle-sidebar)
+    :bind ("C-x C-n" . dired-sidebar-toggle-sidebar)
+    :config
+
+    (defun t/dired-sidebar-mode ()
+      (interactive)
+      (unless (file-remote-p default-directory)
+                (auto-revert-mode)))
+
+    (add-hook 'dired-sidebar-mode-hook 't/dired-sidebar-mode)
+
+    (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
+    (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+
+    ;; (setq dired-sidebar-subtree-line-prefix "__")
+    ;; (setq dired-sidebar-theme 'vscode)
+    ;; (setq dired-sidebar-use-term-integration t)
+    ;; (setq dired-sidebar-use-custom-font t)
+)
+
+  (add-hook 'dired-mode-hook 'dired-subtree-toggle)
+
+  ;; (defun t/dired-subtree-tab ()
+  ;;   (interactive)
+
+  ;;   )
+
   :bind (:map dired-mode-map
+              ("<tab>" . dired-subtree-toggle)
               ("h" . dired-single-up-directory)
               ("H" . dired-omit-mode)
               ("l" . dired-single-buffer)
