@@ -147,6 +147,16 @@ npm install -g eslint babel babel-eslint typescript typescript-language-server e
 This configuration uses `sourcekit-lsp` for Swift. The `sourcekit-lsp` is bundled with Xcode 11.4 and later. Download latest Xcode from the Mac App Store or from the Apple Developer Portal. Or simply do a `xcode-select --install` in your terminal.
 
 
+#### Rust
+
+Install components for the rust lsp to work propperly:
+
+```sh
+rustup component add rust-src
+rustup component add rust-analyzer
+```
+
+
 #### Java
 
 The Java setup depends on `lombok.jar`. It may be downloaded form [projectlombok.org/download](https://projectlombok.org/download).

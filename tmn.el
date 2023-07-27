@@ -31,9 +31,11 @@
 ;; Environemtn Variables
 ;; -----------------------------------------------------------------------------
 
+;; Java
 (if (file-directory-p "/opt/homebrew/opt/openjdk@11")
     (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
 
+;; Rust
 (setenv "RUSTUP_TOOLCHAIN" "stable")
 
 ;; -----------------------------------------------------------------------------
@@ -1009,7 +1011,6 @@ parses its input."
     (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 
-
   (set-face-attribute 'org-document-title nil :font "SF Mono" :weight 'bold :height 1.3)
 
   (dolist (face '((org-level-1 . 1.2)
@@ -1103,17 +1104,17 @@ parses its input."
   ;; (setq lsp-enable-symbol-highlighting nil)
   ;; (setq lsp-signature-auto-activate nil)
 
-  ;; comment to disable rustfmt on save
-  (add-hook 'rustic-mode-hook 't/rustic-mode-hook))
-
-(defun t/rustic-mode-hook ()
-  "So that run C-c C-c C-r works without having to confirm, but don't try to
+  (defun t/rustic-mode-hook ()
+    "So that run C-c C-c C-r works without having to confirm, but don't try to
 save rust buffers that are not file visiting. Once
  https://github.com/brotzeit/rustic/issues/253 has been resolved this should
  no longer be necessary."
-  (when buffer-file-name
-    (setq-local buffer-save-without-query t))
+    (when buffer-file-name
+      (setq-local buffer-save-without-query t))
   (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+
+  ;; comment to disable rustfmt on save
+  (add-hook 'rustic-mode-hook 't/rustic-mode-hook))
 
 (use-package rust-playground)
 
