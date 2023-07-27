@@ -2,7 +2,7 @@
 
 **My .emacs.d - use it, break it, fix it, trash it**
 
-This emacs configuration is tested in emacs 27.1 on macOS.
+This emacs configuration is currentlig being used with emacs 29.0, and tested in 28.2.
 
 
 ## Usage
@@ -14,13 +14,92 @@ git clone https://github.com/tmn/.emacs.d.git ~/.emacs.d
 ```
 
 
-## Install Emacs
+## Get Emacs
 
-Whatever port of emacs would do. I prefer the pure one using cask:
+### Install from som repository
+
+There are many ways of installing emacs for your favorite operating system. I'm currently rocking macs with the Apple Silicone so my prefered way is to build emacs from source. But whatever port of emacs would do. A pure one using cask:
 
 ```bash
 brew install --cask emacs
 ```
+
+### Building from source
+
+#### Dependencies
+
+Dependencies are installed through [brew](https://brew.sh/).
+
+* autoconf
+* coreutils
+* gcc
+* gnu-sed
+* gpg
+* gpg-config
+* imagemagick
+* jansson
+* libgccjit
+* librsvg
+* ripgrep
+* texinfo
+
+```sh
+brew install autoconf coreutils gcc  gnu-sed gpg gpg-config imagemagick jansson libgccjit librsvg ripgrep texinfo
+```
+
+#### Building
+
+GNU Emacs source code and development is hosted on [savannah.gnu.org](https://savannah.gnu.org/projects/emacs/).
+
+My `build.sh`:
+
+```bash
+#!/bin/bash
+
+readonly GCC_DIR="$(realpath $(brew --prefix)/opt/libgccjit)"
+[[ -d $GCC_DIR ]] ||  { echo "${GCC_DIR} not found"; exit 1; }
+
+readonly SED_DIR="$(realpath $(brew --prefix)/opt/gnu-sed)"
+[[ -d $SED_DIR ]] ||  { echo "${SED_DIR} not found"; exit 1; }
+
+readonly GCC_INCLUDE_DIR=${GCC_DIR}/include
+[[ -d $GCC_INCLUDE_DIR ]] ||  { echo "${GCC_INCLUDE_DIR} not found"; exit
+1; }
+
+readonly GCC_LIB_DIR=${GCC_DIR}/lib/gcc/13
+[[ -d $GCC_LIB_DIR ]] ||  { echo "${GCC_LIB_DIR} not found"; exit 1; }
+
+export PATH="${SED_DIR}/libexec/gnubin:${PATH}"
+export CFLAGS="-I${GCC_INCLUDE_DIR}"
+export LDFLAGS="-L${GCC_LIB_DIR} -I${GCC_INCLUDE_DIR}"
+export DYLD_FALLBACK_LIBRARY_PATH="${GCC_LIB_DIR}"
+export LIBRARY_PATH="${GCC_LIB_DIR}"
+
+echo "----------- Environment -----------"
+echo PATH: $PATH
+echo CFLAGS: $CFLAGS
+echo LDFLAGS: $LDFLAGS
+echo DYLD_FALLBACK_LIBRARY_PATH: $DYLD_FALLBACK_LIBRARY_PATH
+echo LIBRARY_PATH: $LIBRARY_PATH
+echo "----------- /Environment -----------"
+
+./autogen.sh
+./configure \
+    --with-native-compilation \
+    --with-modules \
+    --with-json \
+    --with-mailutils
+```
+
+Run these commands:
+
+```sh
+./build.sh
+make -j $(nproc)
+make install
+```
+
+If you're building it on a mac you'll find the `Emacs.app` in the `nextstep` directory.
 
 
 ## Dependencies
@@ -32,16 +111,13 @@ This emacs configuration depends on a few packages installed outside of emacs.
 
 Install system dependencies for some of the emacs packages:
 
-* ripgrep
-* ctags
 * node
 * openjdk@11
-* coreutils
 
 I.e. using brew:
 
-```bash
-brew install ripgrep ctags node openjdk@11 coreutils librsvg pyright
+```sh
+brew install node openjdk@11 pyright
 ```
 
 > Rember to add Java to `PATH`.

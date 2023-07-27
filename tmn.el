@@ -4,7 +4,6 @@
 
 ;;; Code:
 
-
 ;; -----------------------------------------------------------------------------
 ;; System Workaround for emacs version <29.x
 ;; -----------------------------------------------------------------------------
@@ -153,6 +152,7 @@
   ; (load-theme 'doom-vibrant t)
   ; (load-theme 'doom-opera-light t)
   (load-theme 'modus-operandi t)
+  ; (load-theme 'tsdh-light t)
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -411,6 +411,7 @@
 
 (use-package all-the-icons-dired)
 
+
 (use-package dired
   :straight nil
   :ensure nil
@@ -642,7 +643,7 @@
 
 
 (defun t/get-project-root ()
-  "Get project root"
+  "Get project root."
   (when (fboundp 'projectile-project-root)
     (projectile-project-root)))
 
