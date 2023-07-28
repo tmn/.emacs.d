@@ -152,9 +152,10 @@
 (use-package doom-themes
   :init
   ; (load-theme 'doom-vibrant t)
-  ; (load-theme 'doom-opera-light t)
-  (load-theme 'modus-operandi t)
-  ; (load-theme 'tsdh-light t)
+  (load-theme 'doom-opera-light t)
+  ; (load-theme 'modus-operandi t)
+
+  ; (disable-theme 'modus-operandi)
   :config
   (progn
     (setq doom-themes-enable-bold t
@@ -934,7 +935,6 @@ parses its input."
 (use-package tree-sitter-indent
   :straight (tree-sitter-indent :type git :host github :repo "emacsmirror/tree-sitter-indent"))
 
-
 (use-package tsi
   :commands (tsi-typescript-mode)
   :straight (tsi :type git :host github :repo "orzechowskid/tsi.el")
@@ -996,12 +996,6 @@ parses its input."
 
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-use-outline-path t)
-
-  ;; (org-babel-do-load-languages
-  ;;  'org-babel-load-languages
-  ;;  '((emacs-lisp . t)
-  ;;    (ledger . t)))
-
 
   (use-package org-superstar
     :after org
@@ -1146,25 +1140,5 @@ save rust buffers that are not file visiting. Once
 (use-package cmake-mode)
 
 (use-package restclient)
-
-
-;; (defun t/call-openapi-language-model (text)
-;;   "Calls the OpenAPI Language Model API with the given text and returns the response."
-;;   (let* ((api-key "LOL")
-;;          (url (concat "https://api.openai.com/v1/chat/completions"))
-;;          (payload `(:prompt ,text
-;;                      :temperature 0.5
-;;                      :max-tokens 100)))
-;;     (with-current-buffer
-;;         (url-retrieve-synchronously url
-;;                                     `(("Content-Type" . "application/json")
-;;                                       ("Authorization" . ,(concat "Bearer " api-key))))
-;;       (goto-char (point-min))
-;;       (search-forward-regexp "\n\n")
-;;       (let ((response (buffer-substring-no-properties (point) (point-max))))
-;;         (let (test json-read-from-string response)
-;;           (message test))))))
-
-;; (t/call-openapi-language-model "asdf")
 
 ;;; tmn.el ends here
