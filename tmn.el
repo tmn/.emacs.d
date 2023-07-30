@@ -223,10 +223,17 @@
 (use-package lsp-mode
   :commands lsp
   :init
+  (setq lsp-server-install-dir (concat user-emacs-directory "lsp/"))
+
   (setq lsp-keymap-prefix "C-c C-l")
+
+  ;; Clangd stuff
+  (setq lsp-clients-clangd-args '"--compile-commands-dir=./_build")
+
   (defun t/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
+
   :bind ("M-RET" . lsp-execute-code-action)
   :custom
   (lsp-print-io nil)
@@ -336,8 +343,8 @@
                  (reusable-frames . visible)
                  (window-height   . 0.15)))
   :config
-  (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++11"
-                                            flycheck-clang-language-standard "c++11"))))
+  (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"
+                                            flycheck-clang-language-standard "c++14"))))
 
 (use-package winum
   :init
@@ -435,7 +442,7 @@
   (defun t/dired-mode ()
     "Dired mode func."
     (interactive)
-    (dired-omit-mode 0)
+    (dired-omit-mode 1)
     (dired-hide-details-mode 1)
     (all-the-icons-dired-mode 1)
     (hl-line-mode 1))
@@ -885,11 +892,12 @@ parses its input."
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode))
   :config
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-enable-auto-closing t
-        web-mode-enable-auto-pairing t))
+  (progn
+  (setq web-mode-markup-indent-offset 4
+        web-mode-code-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-enable-auto-closing t
+        web-mode-enable-auto-pairing t)))
 
 (use-package json-mode
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
