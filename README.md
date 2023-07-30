@@ -113,11 +113,12 @@ Install system dependencies for some of the emacs packages:
 
 * node
 * openjdk@11
+* semgrep
 
 I.e. using brew:
 
 ```sh
-brew install node openjdk@11 pyright
+brew install node openjdk@11 pyright semgrep
 ```
 
 > Rember to add Java to `PATH`.
