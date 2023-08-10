@@ -116,6 +116,7 @@ Install system dependencies for some of the emacs packages:
 * node
 * openjdk@11
 * semgrep
+* pyright
 
 I.e. using brew:
 

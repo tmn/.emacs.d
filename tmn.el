@@ -113,8 +113,8 @@
 ;; Native Parentheses Matching
 ;; -----------------------------------------------------------------------------
 
-(show-paren-mode 1)
-(setq show-paren-delay 0)
+(setq show-paren-delay 0
+      show-paren-mode 1)
 
 (defun match-paren (arg)
   "Go to the matching paren using ARG if on a paren; otherwise insert ARG."
@@ -122,6 +122,7 @@
   (cond ((looking-at "\\s(") (forward-list 1) (backward-char 1))
         ((looking-at "\\s)") (forward-char 1) (backward-list 1))
         (t (self-insert-command (or arg 1)))))
+
 (global-set-key "%" 'match-paren)
 
 
@@ -149,8 +150,8 @@
         doom-themes-padded-modeline nil)
 
   ; (load-theme 'doom-vibrant t)
-  (load-theme 'doom-opera-light t)
-  ; (load-theme 'modus-operandi t)
+  ; (load-theme 'doom-opera-light t)
+  (load-theme 'modus-operandi t)
   ; (disable-theme 'modus-operandi)
 
   (doom-themes-visual-bell-config)
@@ -206,9 +207,14 @@
         projectile-enable-caching t
         projectile-indexing-method 'native)
 
-  (setq projectile-globally-ignored-directories (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules" ".next" "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
-        projectile-globally-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
-        grep-find-ignored-files (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
+  (setq projectile-globally-ignored-directories
+        (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules" ".next" "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
+
+        projectile-globally-ignored-files
+        (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
+
+        grep-find-ignored-files
+        (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
 
 (use-package corfu
   :straight (corfu :type git :host github :repo "minad/corfu")
@@ -219,8 +225,8 @@
   (global-corfu-mode))
 
 
-
-
+;; Tree-sitter
+;;------------------------------------------------------------------------------
 (setq treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
      (cmake "https://github.com/uyha/tree-sitter-cmake")
@@ -292,6 +298,49 @@
 (add-hook 'tsx-ts-mode-hook 'eglot-ensure)
 
 
+;; JavaScript
+;;------------------------------------------------------------------------------
+(setq auto-mode-alist (append '(("\\.js\\'" . rjsx-mode)
+                                ("\\.jsx\\'" . rjsx-mode))
+                              auto-mode-alist))
+
+(add-to-list 'eglot-server-programs '((js2-mode rjsx-mode) . ("typescript-language-server" "--stdio")))
+
+(add-hook 'js2-mode-hook 'eglot-ensure)
+(add-hook 'rsjx-mode-hook 'eglot-ensure)
+
+
+;; Swift
+;;------------------------------------------------------------------------------
+(use-package swift-mode
+  :mode "\\.swift$")
+
+(add-to-list 'eglot-server-programs '((swift-mode) . ("xcrun" "sourcekit-lsp")))
+(add-hook 'swift-mode-hook 'eglot-ensure)
+
+
+;; Python
+;;------------------------------------------------------------------------------
+(use-package python-mode
+  :custom
+  (python-shell-interpreter "python3"))
+
+(use-package lsp-pyright
+  :after (python-mode)
+  :config
+  (defun t/python-mode ()
+    (interactive)
+    (require 'lsp-pyright)
+    (eglot-ensure))
+
+  (add-hook 'python-mode-hook 't/python-mode))
+
+
+
+;;------------------------------------------------------------------------------
+;;------------------------------------------------------------------------------
+
+
 
 ;; LSP mode
 ;;------------------------------------------------------------------------------
@@ -321,15 +370,6 @@
   ;; / disable as you prefer. Well require a `lsp-workspace-restart' to have an
   ;; effect on open projects.
 
-  ;; (lsp-rust-analyzer-cargo-watch-command "clippy")
-  ;; (lsp-rust-analyzer-server-display-inlay-hints t)
-  ;; (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
-  ;; (lsp-rust-analyzer-display-chaining-hints t)
-  ;; (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
-  ;; (lsp-rust-analyzer-display-closure-return-type-hints t)
-  ;; (lsp-rust-analyzer-display-parameter-hints nil)
-  ;; (lsp-rust-analyzer-display-reborrow-hints nil)
-
   :config
   (dolist (directories '("[/\\\\].data\\'"
                          "[/\\\\].github\\'"
@@ -345,17 +385,7 @@
     (push directories lsp-file-watch-ignored))
   :hook (
          (lsp-completion-mode . t/lsp-mode-setup-completion)
-         ((dart-mode
-           java-mode
-           ;; js-mode
-           ;; js2-mode
-           ;; rjsx-mode
-           swift-mode
-           ;; typescript-mode
-           ;; tsx-mode
-           python-mode
-           ;; web-mode
-           ) . lsp-deferred)
+         ((java-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
@@ -815,10 +845,6 @@ parses its input."
   (yas-reload-all)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets")))
 
-;; Dart and flutter mode
-(use-package lsp-dart
-  :after lsp-mode)
-
 
 ;; Package `java`
 (use-package lsp-java
@@ -883,19 +909,9 @@ parses its input."
 
 (use-package prettier-js
   :commands prettier-js-mode
-  :hook ((
-          ;; typescript-ts-mode
-          json-mode
-
-          ;; typescript-mode
-          ;; tsx-mode
-          ;; web-mode
-          ) . prettier-js-mode))
-
-;; (use-package typescript-mode
-;;   :mode "\\.\\(ts\\|tsx\\)$"
-;;   :init
-;;   (setq-default typescript-indent-level 2))
+  :hook ((json-mode
+          tsx-ts-mode
+          typescript-ts-mode) . prettier-js-mode))
 
 (use-package rjsx-mode
   :mode "\\.js$"
@@ -915,18 +931,16 @@ parses its input."
 
 (use-package ember-mode)
 
-;; (use-package web-mode
-;;   :commands (web-mode)
-;;   :mode (("\\.html\\'" . web-mode)
-;;          ("\\.html\\.eex\\'" . web-mode)
-;;          ("\\.html\\.tera\\'" . web-mode))
-;;   :config
-;;   (progn
-;;   (setq web-mode-markup-indent-offset 4
-;;         web-mode-code-indent-offset 2
-;;         web-mode-css-indent-offset 2
-;;         web-mode-enable-auto-closing t
-;;         web-mode-enable-auto-pairing t)))
+(use-package web-mode
+  :commands (web-mode)
+  :mode (("\\.html\\'" . web-mode))
+  :config
+  (progn
+  (setq web-mode-markup-indent-offset 4
+        web-mode-code-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-enable-auto-closing t
+        web-mode-enable-auto-pairing t)))
 
 (use-package json-mode
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
@@ -941,45 +955,6 @@ parses its input."
 (use-package mustache-mode
   :mode "\\.mustache$")
 
-;; Python
-(use-package python-mode
-  :hook
-  (python-mode . flycheck-mode)
-  :custom
-  (python-shell-interpreter "python3"))
-
-(use-package lsp-pyright
-  :after (python-mode)
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp))))
-
-;; Tree Sitter
-;; (use-package tree-sitter
-;;   :after (tree-sitter-langs)
-;;   :commands (tree-sitter-mode global-tree-sitter-mode)
-;;   :init
-;;   (require 'tree-sitter-langs)
-;;   (global-tree-sitter-mode)
-;;   :config
-;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-;; (use-package tree-sitter-langs
-;;   :straight (tree-sitter-langs :type git :host github :repo "emacsmirror/tree-sitter-langs")
-;;   :config
-;;   (tree-sitter-require 'tsx))
-
-;; (use-package tree-sitter-indent
-;;   :straight (tree-sitter-indent :type git :host github :repo "emacsmirror/tree-sitter-indent"))
-
-;; (use-package tsi
-;;   :commands (tsi-typescript-mode)
-;;   :straight (tsi :type git :host github :repo "orzechowskid/tsi.el")
-;;   :mode (("\\.tsx$" . tsi-typescript-mode)))
-
-;; (use-package tsx-mode
-;;   :straight (tsx-mode :type git :host github :repo "orzechowskid/tsx-mode.el")
-;;   :mode (("\\.tsx$" . tsx-mode)))
 
 (use-package origami
   :straight (origami :type git :host github :repo "gregsexton/origami.el")
@@ -1106,14 +1081,6 @@ parses its input."
 ;;   (setq tab-width 4
 ;;         qml-indent-width 4))
 
-;; Swift
-(use-package swift-mode
-  :after lsp-mode)
-
-(use-package lsp-sourcekit
-  :after lsp-mode
-  :config
-  (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
 
 (use-package csharp-mode
   :commands (csharp-tree-sitter-mode)
