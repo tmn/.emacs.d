@@ -150,26 +150,30 @@
          (prog-mode . ws-butler-mode)))
 
 (use-package doom-themes
-  :init
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t
+        doom-themes-padded-modeline nil)
+
   ; (load-theme 'doom-vibrant t)
   (load-theme 'doom-opera-light t)
   ; (load-theme 'modus-operandi t)
-
   ; (disable-theme 'modus-operandi)
-  :config
-  (progn
-    (setq doom-themes-enable-bold t
-          doom-themes-enable-italic t)
-    (doom-themes-visual-bell-config)))
+
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
   :config
-  (setq doom-modeline-height 30
+  (setq doom-modeline-height 28
+        doom-modeline-bar-width 4
+        doom-modeline-hud nil
         doom-modeline-lsp t
         doom-modeline-icon t
         doom-modeline-major-mode-icon t
         doom-modeline-major-mode-color-icon t
+        doom-modeline-buffer-state-icon t
         doom-modeline-buffer-file-name-style 'file-name
         doom-modeline-minor-modes nil
         doom-modeline-buffer-encoding nil
@@ -180,8 +184,9 @@
   :commands (emojify-mode))
 
 (use-package expand-region
-  :bind (("C-=" . er/expand-region)
-         ("C-." . er/contract-region)))
+  :bind (("M-[" . er/expand-region)
+         ("M-]" . er/contract-region)
+         ("C-=" . er/mark-outside-pairs)))
 
 (use-package multiple-cursors
   :bind (("C-c C-. ."   . mc/mark-all-dwim)
@@ -220,15 +225,31 @@
   :config
   (global-corfu-mode))
 
+
+
+
+(defun t/setup-eglot ()
+  (require 'eglot)
+  (add-to-list 'eglot-server-programs '((c++-mode c-mode) . ("clangd")))
+  (add-to-list 'eglot-server-programs '(rust-mode . ("rust-analyzer" :initializationOptions
+                                                     ( :procMacro (:enable t)
+                                                       :cargo ( :buildScripts (:enable t)
+                                                                :features "all" )))))
+
+  (add-hook 'c-mode-hook 'eglot-ensure)
+  (add-hook 'c++-mode-hook 'eglot-ensure)
+  (add-hook 'rust-mode-hook 'eglot-ensure))
+
+(t/setup-eglot)
+
+
+
+
 (use-package lsp-mode
   :commands lsp
   :init
   (setq lsp-server-install-dir (concat user-emacs-directory "lsp/"))
-
   (setq lsp-keymap-prefix "C-c C-l")
-
-  ;; Clangd stuff
-  (setq lsp-clients-clangd-args '"--compile-commands-dir=./_build")
 
   (defun t/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
@@ -244,20 +265,21 @@
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-idle-delay 0.5)
 
-
   (lsp-eldoc-render-all t)
   (lsp-idle-delay 0.6)
   ;; This controls the overlays that display type and other hints inline. Enable
   ;; / disable as you prefer. Well require a `lsp-workspace-restart' to have an
   ;; effect on open projects.
-  (lsp-rust-analyzer-cargo-watch-command "clippy")
-  (lsp-rust-analyzer-server-display-inlay-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
-  (lsp-rust-analyzer-display-chaining-hints t)
-  (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
-  (lsp-rust-analyzer-display-closure-return-type-hints t)
-  (lsp-rust-analyzer-display-parameter-hints nil)
-  (lsp-rust-analyzer-display-reborrow-hints nil)
+
+  ;; (lsp-rust-analyzer-cargo-watch-command "clippy")
+  ;; (lsp-rust-analyzer-server-display-inlay-hints t)
+  ;; (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  ;; (lsp-rust-analyzer-display-chaining-hints t)
+  ;; (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+  ;; (lsp-rust-analyzer-display-closure-return-type-hints t)
+  ;; (lsp-rust-analyzer-display-parameter-hints nil)
+  ;; (lsp-rust-analyzer-display-reborrow-hints nil)
+
   :config
   (dolist (directories '("[/\\\\].data\\'"
                          "[/\\\\].github\\'"
@@ -273,9 +295,7 @@
     (push directories lsp-file-watch-ignored))
   :hook (
          (lsp-completion-mode . t/lsp-mode-setup-completion)
-         ((c-mode
-           c++-mode
-           dart-mode
+         ((dart-mode
            java-mode
            js-mode
            js2-mode
@@ -334,7 +354,7 @@
   :demand t
   :commands flycheck-mode
   :init
-  (global-flycheck-mode)
+  ;; (global-flycheck-mode)
   (add-to-list 'display-buffer-alist
                `(,(rx bos "*Flycheck errors*" eos)
                  (display-buffer-reuse-window
@@ -343,8 +363,9 @@
                  (reusable-frames . visible)
                  (window-height   . 0.15)))
   :config
-  (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"
-                                            flycheck-clang-language-standard "c++14"))))
+  ;; (add-hook 'c++-mode-hook (lambda () (setq flycheck-gcc-language-standard "c++14"
+  ;;                                           flycheck-clang-language-standard "c++14")))
+)
 
 (use-package winum
   :init
@@ -375,53 +396,6 @@
   :defer t
   :hook (org-mode . t/org-mode-visual-fill))
 
-
-;; (use-package treemacs-all-the-icons)
-
-;; (use-package treemacs
-;;   :commands (treemacs-follow-mode
-;;              treemacs-filewatch-mode
-;;              treemacs-load-theme)
-;;   :init
-;;   (with-eval-after-load 'winum
-;;     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-;;   (setq treemacs-follow-after-init t
-;;         treemacs-is-never-other-window t
-;;         treemacs-sorting 'alphabetic-case-insensitive-asc
-;;         treemacs-persist-file "~/.emacs.d/.cache/treemacs-persist"
-;;         treemacs-last-error-persist-file "~/.emacs.d/.cache/treemacs-last-error-persist")
-;;   :bind (("M-0"       . treemacs-select-window)
-;;          ("C-x t 1"   . treemacs-delete-other-windows)
-;;          ("C-c t t"   . treemacs)
-;;          ("C-c t B"   . treemacs-bookmarks)
-;;          ("C-c t C-t" . treemacs-find-file)
-;;          ("C-c t M-t" . treemacs-find-tag))
-;;   :config
-;;   (treemacs-follow-mode -1)
-;;   (require 'treemacs-all-the-icons)
-;;   (treemacs-load-theme "all-the-icons")
-;;   (setq treemacs-project-follow-mode t)
-;;   (treemacs-filewatch-mode t)
-
-;;   :custom
-;;   (treemacs-space-between-root-nodes nil)
-;;   (treemacs-fringe-indicator-mode nil)
-;;   (treemacs-indentation 2))
-
-;; (use-package treemacs-projectile
-;;   :after (treemacs projectile))
-
-;; (use-package treemacs-icons-dired
-;;   :after (treemacs dired)
-;;   :config
-;;   (treemacs-icons-dired-mode))
-
-;; (use-package treemacs-magit
-;;   :after (treemacs magit))
-
-(use-package all-the-icons-dired)
-
-
 (use-package dired
   :straight nil
   :ensure nil
@@ -444,7 +418,7 @@
     (interactive)
     (dired-omit-mode 1)
     (dired-hide-details-mode 1)
-    (all-the-icons-dired-mode 1)
+    (nerd-icons-dired-mode 1)
     (hl-line-mode 1))
 
   (autoload 'dired-omit-mode "dired-x")
@@ -759,16 +733,16 @@ parses its input."
     (when (string-suffix-p "." pattern)
       `(orderless-flex . ,(substring pattern 0 -1)))))
 
-(use-package all-the-icons
-  :straight (all-the-icons :type git :host github :repo "domtronn/all-the-icons.el")
-  :config
-  (setq all-the-icons-scale-factor 0.9))
 
-(use-package all-the-icons-completion
-  :after (marginalia all-the-icons)
-  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-  :init
-  (all-the-icons-completion-mode))
+(use-package nerd-icons)
+
+(use-package nerd-icons-dired
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
+(use-package nerd-icons-completion
+  :config
+  (nerd-icons-completion-mode))
 
 (use-package editorconfig
   :init (editorconfig-mode 1))
@@ -1087,43 +1061,24 @@ parses its input."
   (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
 
 ;; Rust
-(use-package rustic
-  :bind (:map rustic-mode-map
-              ("M-j" . lsp-ui-imenu)
-              ("M-?" . lsp-find-references)
-              ("C-c C-c l" . flycheck-list-errors)
-              ("C-c C-c a" . lsp-execute-code-action)
-              ("C-c C-c r" . lsp-rename)
-              ("C-c C-c q" . lsp-workspace-restart)
-              ("C-c C-c Q" . lsp-workspace-shutdown)
-              ("C-c C-c s" . lsp-rust-analyzer-status)
-              ("C-c C-c e" . lsp-rust-analyzer-expand-macro)
-              ("C-c C-c d" . dap-hydra)
-              ("C-c C-c h" . lsp-ui-doc-glance))
+(use-package rust-mode
   :config
-  ;; uncomment for less flashiness
-  ;; (setq lsp-eldoc-hook nil)
-  ;; (setq lsp-enable-symbol-highlighting nil)
-  ;; (setq lsp-signature-auto-activate nil)
+  (setq rust-format-on-save t)
 
-  (defun t/rustic-mode-hook ()
-    "So that run C-c C-c C-r works without having to confirm, but don't try to
-save rust buffers that are not file visiting. Once
- https://github.com/brotzeit/rustic/issues/253 has been resolved this should
- no longer be necessary."
-    (when buffer-file-name
-      (setq-local buffer-save-without-query t))
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t))
+  (defun t/rust-mode-prettifying ()
+    "Dired load func."
+    (interactive)
+    (prettify-symbols-mode))
 
-  ;; comment to disable rustfmt on save
-  (add-hook 'rustic-mode-hook 't/rustic-mode-hook))
+  (add-hook 'rust-mode-hook 't/rust-mode-prettifying))
 
 (use-package rust-playground)
 
 (use-package toml-mode)
 
 (use-package cargo
-  :hook (rustic-mode . cargo-minor-mode))
+  :after rust-mode
+  :hook ((rust-mode . cargo-minor-mode)))
 
 (use-package csharp-mode
   :commands (csharp-tree-sitter-mode)
