@@ -62,8 +62,8 @@
 
 ;; (set-frame-parameter (selected-frame) 'alpha '(98 . 98))
 ;; (add-to-list 'default-frame-alist '(alpha . (98 . 98)))
-(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+;; (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 
 ;; Follow symlinks
@@ -228,23 +228,80 @@
 
 
 
-(defun t/setup-eglot ()
-  (require 'eglot)
-  (add-to-list 'eglot-server-programs '((c++-mode c-mode) . ("clangd")))
-  (add-to-list 'eglot-server-programs '(rust-mode . ("rust-analyzer" :initializationOptions
-                                                     ( :procMacro (:enable t)
-                                                       :cargo ( :buildScripts (:enable t)
-                                                                :features "all" )))))
+(setq treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
-  (add-hook 'c-mode-hook 'eglot-ensure)
-  (add-hook 'c++-mode-hook 'eglot-ensure)
-  (add-hook 'rust-mode-hook 'eglot-ensure))
 
-(t/setup-eglot)
+;; Eglot stuff
+;;------------------------------------------------------------------------------
+(require 'eglot)
+
+;; Patch pretty print of jsonrpc log making whole thing goes slooooooow
+(fset #'jsonrpc--log-event #'ignore)
+
+
+;; C / C++
+;;------------------------------------------------------------------------------
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) . ("clangd")))
+
+(add-hook 'c-mode-hook 'eglot-ensure)
+(add-hook 'c++-mode-hook 'eglot-ensure)
+
+
+;; Rust
+;;------------------------------------------------------------------------------
+(use-package rust-mode
+  :config
+  (setq rust-format-on-save t)
+
+  (use-package cargo :hook ((rust-mode . cargo-minor-mode)))
+  (use-package rust-playground)
+  (use-package toml-mode)
+
+  (defun t/rust-mode-prettifying ()
+    "Dired load func."
+    (interactive)
+    (prettify-symbols-mode))
+
+  (add-hook 'rust-mode-hook 't/rust-mode-prettifying))
+
+(add-to-list 'eglot-server-programs '((rust-mode) . ("rust-analyzer" :initializationOptions
+                                                   ( :procMacro (:enable t)
+                                                     :cargo ( :buildScripts (:enable t)
+                                                              :features "all" )))))
+
+(add-hook 'rust-mode-hook 'eglot-ensure)
+
+
+;; TypeScript
+;;------------------------------------------------------------------------------
+(setq auto-mode-alist (append '(("\\.ts\\'" . typescript-ts-mode)
+                                ("\\.tsx\\'" . tsx-ts-mode))
+                              auto-mode-alist))
+
+(add-to-list 'eglot-server-programs '((typescript-ts-mode tsx-ts-mode) . ("typescript-language-server" "--stdio")))
+
+(add-hook 'typescript-ts-mode-hook 'eglot-ensure)
+(add-hook 'tsx-ts-mode-hook 'eglot-ensure)
 
 
 
-
+;; LSP mode
+;;------------------------------------------------------------------------------
 (use-package lsp-mode
   :commands lsp
   :init
@@ -297,14 +354,15 @@
          (lsp-completion-mode . t/lsp-mode-setup-completion)
          ((dart-mode
            java-mode
-           js-mode
-           js2-mode
-           rjsx-mode
+           ;; js-mode
+           ;; js2-mode
+           ;; rjsx-mode
            swift-mode
-           typescript-mode
-           tsx-mode
+           ;; typescript-mode
+           ;; tsx-mode
            python-mode
-           web-mode) . lsp-deferred)
+           ;; web-mode
+           ) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
@@ -832,15 +890,19 @@ parses its input."
 
 (use-package prettier-js
   :commands prettier-js-mode
-  :hook ((typescript-mode
-          tsx-mode
+  :hook ((
+          ;; typescript-ts-mode
           json-mode
-          web-mode) . prettier-js-mode))
 
-(use-package typescript-mode
-  :mode "\\.\\(ts\\|tsx\\)$"
-  :init
-  (setq-default typescript-indent-level 2))
+          ;; typescript-mode
+          ;; tsx-mode
+          ;; web-mode
+          ) . prettier-js-mode))
+
+;; (use-package typescript-mode
+;;   :mode "\\.\\(ts\\|tsx\\)$"
+;;   :init
+;;   (setq-default typescript-indent-level 2))
 
 (use-package rjsx-mode
   :mode "\\.js$"
@@ -860,18 +922,18 @@ parses its input."
 
 (use-package ember-mode)
 
-(use-package web-mode
-  :commands (web-mode)
-  :mode (("\\.html\\'" . web-mode)
-         ("\\.html\\.eex\\'" . web-mode)
-         ("\\.html\\.tera\\'" . web-mode))
-  :config
-  (progn
-  (setq web-mode-markup-indent-offset 4
-        web-mode-code-indent-offset 2
-        web-mode-css-indent-offset 2
-        web-mode-enable-auto-closing t
-        web-mode-enable-auto-pairing t)))
+;; (use-package web-mode
+;;   :commands (web-mode)
+;;   :mode (("\\.html\\'" . web-mode)
+;;          ("\\.html\\.eex\\'" . web-mode)
+;;          ("\\.html\\.tera\\'" . web-mode))
+;;   :config
+;;   (progn
+;;   (setq web-mode-markup-indent-offset 4
+;;         web-mode-code-indent-offset 2
+;;         web-mode-css-indent-offset 2
+;;         web-mode-enable-auto-closing t
+;;         web-mode-enable-auto-pairing t)))
 
 (use-package json-mode
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
@@ -900,27 +962,31 @@ parses its input."
                          (lsp))))
 
 ;; Tree Sitter
-(use-package tree-sitter
-  :after (tree-sitter-langs)
-  :commands (tree-sitter-mode global-tree-sitter-mode)
-  :init
-  (require 'tree-sitter-langs)
-  (global-tree-sitter-mode)
-  :config
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+;; (use-package tree-sitter
+;;   :after (tree-sitter-langs)
+;;   :commands (tree-sitter-mode global-tree-sitter-mode)
+;;   :init
+;;   (require 'tree-sitter-langs)
+;;   (global-tree-sitter-mode)
+;;   :config
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(use-package tree-sitter-langs
-  :straight (tree-sitter-langs :type git :host github :repo "emacsmirror/tree-sitter-langs")
-  :config
-  (tree-sitter-require 'tsx))
+;; (use-package tree-sitter-langs
+;;   :straight (tree-sitter-langs :type git :host github :repo "emacsmirror/tree-sitter-langs")
+;;   :config
+;;   (tree-sitter-require 'tsx))
 
-(use-package tree-sitter-indent
-  :straight (tree-sitter-indent :type git :host github :repo "emacsmirror/tree-sitter-indent"))
+;; (use-package tree-sitter-indent
+;;   :straight (tree-sitter-indent :type git :host github :repo "emacsmirror/tree-sitter-indent"))
 
-(use-package tsi
-  :commands (tsi-typescript-mode)
-  :straight (tsi :type git :host github :repo "orzechowskid/tsi.el")
-  :mode (("\\.tsx$" . tsi-typescript-mode)))
+;; (use-package tsi
+;;   :commands (tsi-typescript-mode)
+;;   :straight (tsi :type git :host github :repo "orzechowskid/tsi.el")
+;;   :mode (("\\.tsx$" . tsi-typescript-mode)))
+
+;; (use-package tsx-mode
+;;   :straight (tsx-mode :type git :host github :repo "orzechowskid/tsx-mode.el")
+;;   :mode (("\\.tsx$" . tsx-mode)))
 
 (use-package origami
   :straight (origami :type git :host github :repo "gregsexton/origami.el")
@@ -930,10 +996,6 @@ parses its input."
   :straight (overlay :type git :host github :repo "twada/coverlay.el"))
 
 (use-package graphql-mode)
-
-(use-package tsx-mode
-  :straight (tsx-mode :type git :host github :repo "orzechowskid/tsx-mode.el")
-  :mode (("\\.tsx$" . tsx-mode)))
 
 
 ;; Package org-mode
@@ -1059,26 +1121,6 @@ parses its input."
   :after lsp-mode
   :config
   (setq lsp-sourcekit-executable (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
-
-;; Rust
-(use-package rust-mode
-  :config
-  (setq rust-format-on-save t)
-
-  (defun t/rust-mode-prettifying ()
-    "Dired load func."
-    (interactive)
-    (prettify-symbols-mode))
-
-  (add-hook 'rust-mode-hook 't/rust-mode-prettifying))
-
-(use-package rust-playground)
-
-(use-package toml-mode)
-
-(use-package cargo
-  :after rust-mode
-  :hook ((rust-mode . cargo-minor-mode)))
 
 (use-package csharp-mode
   :commands (csharp-tree-sitter-mode)

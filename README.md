@@ -42,9 +42,10 @@ Dependencies are installed through [brew](https://brew.sh/).
 * librsvg
 * ripgrep
 * texinfo
+* tree-sitter
 
 ```sh
-brew install autoconf coreutils gcc  gnu-sed gpg gpg-config imagemagick jansson libgccjit librsvg ripgrep texinfo
+brew install autoconf coreutils gcc  gnu-sed gpg gpg-config imagemagick jansson libgccjit librsvg ripgrep texinfo tree-sitter
 ```
 
 #### Building
@@ -88,6 +89,7 @@ echo "----------- /Environment -----------"
     --with-native-compilation \
     --with-modules \
     --with-json \
+    --with-tree-sitter \
     --with-mailutils
 ```
 
@@ -132,14 +134,16 @@ The language configurations depends on some outside packages. These are installe
 #### Packages through npm
 
 * typescript-language-server
+* typescript-eslint-language-service
 * typescript
 * eslint
 * babel
 * babel-eslint
 * elm-format
 
+
 ```bash
-npm install -g eslint babel babel-eslint typescript typescript-language-server elm-format
+npm install -g eslint babel babel-eslint typescript typescript-language-server elm-format typescript-eslint-language-service
 ```
 
 
