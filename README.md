@@ -34,18 +34,22 @@ Dependencies are installed through [brew](https://brew.sh/).
 * coreutils
 * gcc
 * gnu-sed
+* gnutls
 * gpg
 * gpg-config
 * imagemagick
 * jansson
 * libgccjit
 * librsvg
+* libxml2
+* ncurses
 * ripgrep
 * texinfo
 * tree-sitter
 
+
 ```sh
-brew install autoconf coreutils gcc  gnu-sed gpg gpg-config imagemagick jansson libgccjit librsvg ripgrep texinfo tree-sitter
+brew install  autoconf coreutils gcc gnu-sed gnutls gpg gpg-config imagemagick jansson libgccjit librsvg libxml2 ncurses ripgrep texinfo tree-sitter
 ```
 
 #### Building
@@ -87,10 +91,12 @@ echo "----------- /Environment -----------"
 ./autogen.sh
 ./configure \
     --with-native-compilation \
+    --with-gnutls \
+    --with-xml2 \
     --with-modules \
+    --with-imagemagick \
     --with-json \
-    --with-tree-sitter \
-    --with-mailutils
+    --with-tree-sitter
 ```
 
 Run these commands:
@@ -131,7 +137,6 @@ brew install node openjdk@11 pyright semgrep
 
 The language configurations depends on some outside packages. These are installed outside of emacs.
 
-
 #### Packages through npm
 
 * typescript-language-server
@@ -140,11 +145,10 @@ The language configurations depends on some outside packages. These are installe
 * eslint
 * babel
 * babel-eslint
-* elm-format
 
 
 ```bash
-npm install -g eslint babel babel-eslint typescript typescript-language-server elm-format typescript-eslint-language-service
+npm install -g eslint babel babel-eslint typescript typescript-language-server typescript-eslint-language-service
 ```
 
 
