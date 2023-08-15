@@ -995,10 +995,12 @@ parses its input."
 (use-package graphql-mode)
 
 
+;; -----------------------------------------------------------------------------
 ;; Package org-mode
-
+;; -----------------------------------------------------------------------------
 (defun t/org-mode-setup ()
   "..."
+  (interactive)
   (org-indent-mode)
   (variable-pitch-mode 1)
   (auto-fill-mode 0)
@@ -1102,13 +1104,11 @@ parses its input."
          ("\\.rst$" . rst-mode)
          ("\\.rest$" . rst-mode)))
 
-
-;; Qt
-;; (use-package qml-mode
-;;   :mode "\\.qml$"
-;;   :config
-;;   (setq tab-width 4
-;;         qml-indent-width 4))
+(use-package qml-mode
+  :mode "\\.qml$"
+  :config
+  (setq tab-width 4
+        qml-indent-width 4))
 
 
 (use-package csharp-mode
