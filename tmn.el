@@ -346,6 +346,8 @@
     "Passes through required deno initialization options"
     (list :enable t
     :lint t))
+  :custom
+  (setq js-indent-level 2)
   :hook ((js-mode js2-mode js-ts-mode) . eglot-ensure))
 
 (use-package nodejs-repl
