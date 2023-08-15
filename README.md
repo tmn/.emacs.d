@@ -43,13 +43,12 @@ Dependencies are installed through [brew](https://brew.sh/).
 * librsvg
 * libxml2
 * ncurses
-* ripgrep
 * texinfo
 * tree-sitter
 
 
 ```sh
-brew install  autoconf coreutils gcc gnu-sed gnutls gpg gpg-config imagemagick jansson libgccjit librsvg libxml2 ncurses ripgrep texinfo tree-sitter
+brew install  autoconf coreutils gcc gnu-sed gnutls gpg gpg-config imagemagick jansson libgccjit librsvg libxml2 ncurses texinfo tree-sitter
 ```
 
 #### Building
@@ -119,15 +118,17 @@ This emacs configuration depends on a few packages installed outside of emacs.
 
 Install system dependencies for some of the emacs packages:
 
+* deno
 * node
 * openjdk@11
-* semgrep
 * pyright
+* ripgrep
+* semgrep
 
 I.e. using brew:
 
 ```sh
-brew install node openjdk@11 pyright semgrep
+brew install deno node openjdk@11 pyright ripgrep semgrep
 ```
 
 > Rember to add Java to `PATH`.
