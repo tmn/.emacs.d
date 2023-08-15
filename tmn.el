@@ -20,16 +20,6 @@
 (column-number-mode t)
 (global-hl-line-mode 1)
 
-;; -----------------------------------------------------------------------------
-;; Environemtn Variables
-;; -----------------------------------------------------------------------------
-
-;; Java
-(if (file-directory-p "/opt/homebrew/opt/openjdk@11")
-    (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
-
-;; Rust
-(setenv "RUSTUP_TOOLCHAIN" "stable")
 
 ;; -----------------------------------------------------------------------------
 ;; Modify some GUI features
@@ -66,6 +56,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Configure fonts
 ;; -----------------------------------------------------------------------------
+
 (cond
  ((find-font (font-spec :family "SF Mono"))
   (set-frame-font "SF Mono:pixelsize=12"))
@@ -130,9 +121,6 @@
 ;; Bootstrap configs
 ;; -----------------------------------------------------------------------------
 
-;; String helpers
-(use-package s)
-
 (use-package diminish)
 
 (use-package rg
@@ -174,6 +162,7 @@
         doom-modeline-indent-info nil
         doom-modeline-env-version t))
 
+;; Display Emojis in emacs
 (use-package emojify
   :commands (emojify-mode))
 
@@ -194,6 +183,25 @@
          ("C-c C-<" . mc/mark-all-like-this)
          ("C->"     . mc/mark-next-like-this)
          ("C-<"     . mc/mark-previous-like-this)))
+
+(use-package which-key
+  :demand t
+  :config
+  (progn
+    (setq which-key-add-column-padding 1
+          which-key-max-display-columns nil
+          which-key-min-display-lines 1
+          which-key-separator " "
+          which-key-idle-delay 0.5)
+    (which-key-mode)))
+
+(use-package hydra)
+
+
+
+;; -----------------------------------------------------------------------------
+;; Projectile
+;; -----------------------------------------------------------------------------
 
 (use-package projectile
   :commands (projectile-mode projectile-project-root projectile-find-file)
@@ -225,8 +233,10 @@
   (global-corfu-mode))
 
 
+;; -----------------------------------------------------------------------------
 ;; Tree-sitter
-;;------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+
 (setq treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
      (cmake "https://github.com/uyha/tree-sitter-cmake")
@@ -245,25 +255,52 @@
      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
 
+;; -----------------------------------------------------------------------------
 ;; Eglot stuff
-;;------------------------------------------------------------------------------
-(require 'eglot)
+;; -----------------------------------------------------------------------------
 
-;; Patch pretty print of jsonrpc log making whole thing goes slooooooow
-(fset #'jsonrpc--log-event #'ignore)
+(use-package eglot
+  :straight (:type built-in)
+  :commands (eglot-ensure)
+  :config
+  ;; Patch pretty print of jsonrpc log making whole thing goes slooooooow
+  (fset #'jsonrpc--log-event #'ignore))
 
 
+;; -----------------------------------------------------------------------------
 ;; C / C++
-;;------------------------------------------------------------------------------
-(add-to-list 'eglot-server-programs '((c++-mode c-mode) . ("clangd")))
+;; -----------------------------------------------------------------------------
 
-(add-hook 'c-mode-hook 'eglot-ensure)
-(add-hook 'c++-mode-hook 'eglot-ensure)
+(use-package c++-mode
+  :straight nil
+  :custom
+  (add-to-list 'eglot-server-programs '((c++-mode) . ("clangd")))
+  :hook 
+  (c++-mode . eglot-ensure))
+
+(use-package c-mode
+  :straight nil
+  :custom
+  (add-to-list 'eglot-server-programs '((c-mode) . ("clangd")))
+  :hook
+  (c++-mode . eglot-ensure))
 
 
+
+;; -----------------------------------------------------------------------------
 ;; Rust
-;;------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+
 (use-package rust-mode
+  :init
+  ;; Environment Variables
+  (setenv "RUSTUP_TOOLCHAIN" "stable")
+
+  :custom
+  (add-to-list 'eglot-server-programs '((rust-mode) . ("rust-analyzer" :initializationOptions
+                                                   ( :procMacro (:enable t)
+                                                     :cargo ( :buildScripts (:enable t)
+                                                              :features "all" )))))
   :config
   (setq rust-format-on-save t)
 
@@ -276,51 +313,76 @@
     (interactive)
     (prettify-symbols-mode))
 
-  (add-hook 'rust-mode-hook 't/rust-mode-prettifying))
-
-(add-to-list 'eglot-server-programs '((rust-mode) . ("rust-analyzer" :initializationOptions
-                                                   ( :procMacro (:enable t)
-                                                     :cargo ( :buildScripts (:enable t)
-                                                              :features "all" )))))
-
-(add-hook 'rust-mode-hook 'eglot-ensure)
+  :hook
+  ((rust-mode . t/rust-mode-prettifying)
+   (rust-mode . eglot-ensure)))
 
 
-;; TypeScript
-;;------------------------------------------------------------------------------
-(setq auto-mode-alist (append '(("\\.ts\\'" . typescript-ts-mode)
-                                ("\\.tsx\\'" . tsx-ts-mode))
-                              auto-mode-alist))
 
-(add-to-list 'eglot-server-programs '((typescript-ts-mode tsx-ts-mode) . ("typescript-language-server" "--stdio")))
+;; -----------------------------------------------------------------------------
+;; JavaScript / TypeScript
+;; -----------------------------------------------------------------------------
 
-(add-hook 'typescript-ts-mode-hook 'eglot-ensure)
-(add-hook 'tsx-ts-mode-hook 'eglot-ensure)
+(use-package t/typescript-mode
+  :straight nil
+  :mode (("\\.ts\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode))
+  :custom
+  (add-to-list 'eglot-server-programs '((typescript-ts-mode tsx-ts-mode) . ("typescript-language-server" "--stdio")))
+  :hook
+  ((typescript-ts-mode tsx-ts-mode) . eglot-ensure))
 
+(use-package t/javascript-mode
+  :straight nil
+  :mode (("\\.js\\'" . js-ts-mode)
+         ("\\.jsx\\'" . js-ts-mode))
+  :custom
+  (add-to-list 'eglot-server-programs '((js-mode js2-mode js-ts-mode) . (eglot-deno "deno" "lsp")))
 
-;; JavaScript
-;;------------------------------------------------------------------------------
-(setq auto-mode-alist (append '(("\\.js\\'" . rjsx-mode)
-                                ("\\.jsx\\'" . rjsx-mode))
-                              auto-mode-alist))
+  (defclass eglot-deno (eglot-lsp-server) ()
+    :documentation "A custom class for deno lsp.")
 
-(add-to-list 'eglot-server-programs '((js2-mode rjsx-mode) . ("typescript-language-server" "--stdio")))
+  (cl-defmethod eglot-initialization-options ((server eglot-deno))
+    "Passes through required deno initialization options"
+    (list :enable t
+    :lint t))
+  :hook ((js-mode js2-mode js-ts-mode) . eglot-ensure))
 
-(add-hook 'js2-mode-hook 'eglot-ensure)
-(add-hook 'rsjx-mode-hook 'eglot-ensure)
+(use-package nodejs-repl
+  :config
+  (defun t/js-ts-mode-hook ()
+    (interactive)
+    (define-key js-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
+    (define-key js-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
+    (define-key js-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
+    (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
+    (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
+    (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))
 
+  (add-hook 'js-ts-mode-hook 't/js-ts-mode-hook))
 
+(use-package prettier-js
+  :commands prettier-js-mode
+  :hook ((json-mode
+          js-ts-mode
+          tsx-ts-mode
+          typescript-ts-mode) . prettier-js-mode))
+
+;; -----------------------------------------------------------------------------
 ;; Swift
-;;------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
+
 (use-package swift-mode
-  :mode "\\.swift$")
+  :mode "\\.swift$"
+  :custom
+  (add-to-list 'eglot-server-programs '((swift-mode) . ("xcrun" "sourcekit-lsp")))
+  :hook
+  (swift-mode .eglot-ensure))
 
-(add-to-list 'eglot-server-programs '((swift-mode) . ("xcrun" "sourcekit-lsp")))
-(add-hook 'swift-mode-hook 'eglot-ensure)
 
-
+;; -----------------------------------------------------------------------------
 ;; Python
-;;------------------------------------------------------------------------------
+;; -----------------------------------------------------------------------------
 (use-package python-mode
   :custom
   (python-shell-interpreter "python3"))
@@ -332,8 +394,47 @@
     (interactive)
     (require 'lsp-pyright)
     (eglot-ensure))
+  :hook
+  (python-mode . t/python-mode))
 
-  (add-hook 'python-mode-hook 't/python-mode))
+
+;; -----------------------------------------------------------------------------
+;; Java / Kotlin / JVM
+;; -----------------------------------------------------------------------------
+
+;; Environment Variables
+
+(if (file-directory-p "/opt/homebrew/opt/openjdk@11")
+    (setenv "JAVA_HOME" "/opt/homebrew/opt/openjdk@11"))
+
+
+(use-package lsp-java
+  :after (lsp-mode)
+  :config
+  (setq lsp-java-vmargs
+        `("-noverify"
+          "-Xmx2G"
+          "-XX:+UseG1GC"
+          "-XX:+UseStringDeduplication"
+          ,(concat "-javaagent:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))
+          ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))))
+  (setq lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
+  (setq lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
+  (setq lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache"))
+  :custom
+  (progn
+    (require 'lsp-java-boot)
+    (add-hook 'lsp-mode-hook 'lsp-lens-mode)
+    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode)))
+
+(use-package dap-java
+  :straight (dap-java :type git :host github :repo "emacs-lsp/lsp-java"))
+
+;; Package `kotlin`
+(use-package kotlin-mode
+  :mode "\\.kt$")
+
+
 
 
 
@@ -477,6 +578,9 @@
   :defer t
   :hook (org-mode . t/org-mode-visual-fill))
 
+;; -----------------------------------------------------------------------------
+;; Dired
+;; -----------------------------------------------------------------------------
 (use-package dired
   :straight nil
   :ensure nil
@@ -549,10 +653,14 @@
     :defer t
     :commands (dired-sidebar-toggle-sidebar)
     :bind ("C-x C-n" . dired-sidebar-toggle-sidebar)
+    :init
+    (setq dired-sidebar-window-fixed nil)
     :config
 
     (defun t/dired-sidebar-mode ()
       (interactive)
+      (visual-line-mode 0)
+      (toggle-truncate-lines 1)
       (unless (file-remote-p default-directory)
                 (auto-revert-mode)))
 
@@ -560,19 +668,9 @@
 
     (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
     (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
-
-    ;; (setq dired-sidebar-subtree-line-prefix "__")
-    ;; (setq dired-sidebar-theme 'vscode)
-    ;; (setq dired-sidebar-use-term-integration t)
-    ;; (setq dired-sidebar-use-custom-font t)
-)
+    (setq dired-sidebar-theme 'nerd))
 
   (add-hook 'dired-mode-hook 'dired-subtree-toggle)
-
-  ;; (defun t/dired-subtree-tab ()
-  ;;   (interactive)
-
-  ;;   )
 
   :bind (:map dired-mode-map
               ("<tab>" . dired-subtree-toggle)
@@ -584,16 +682,7 @@
               ("p" . dired-ranger-paste)))
 
 
-(use-package which-key
-  :demand t
-  :config
-  (progn
-    (setq which-key-add-column-padding 1
-          which-key-max-display-columns nil
-          which-key-min-display-lines 1
-          which-key-separator " "
-          which-key-idle-delay 0.5)
-    (which-key-mode)))
+
 
 (use-package marginalia
   :bind (:map minibuffer-local-map
@@ -815,6 +904,9 @@ parses its input."
       `(orderless-flex . ,(substring pattern 0 -1)))))
 
 
+;; -----------------------------------------------------------------------------
+;; Nerd icons
+;; -----------------------------------------------------------------------------
 (use-package nerd-icons)
 
 (use-package nerd-icons-dired
@@ -825,11 +917,18 @@ parses its input."
   :config
   (nerd-icons-completion-mode))
 
+;; -----------------------------------------------------------------------------
+;; ...
+;; -----------------------------------------------------------------------------
 (use-package editorconfig
   :init (editorconfig-mode 1))
 
-(use-package hydra)
 
+
+
+;; -----------------------------------------------------------------------------
+;; ...
+;; -----------------------------------------------------------------------------
 (use-package magit
   :commands magit-status
   :bind (("C-c o g" . magit-status))
@@ -844,78 +943,6 @@ parses its input."
   :config
   (yas-reload-all)
   (setq yas-snippet-dirs '("~/.emacs.d/snippets")))
-
-
-;; Package `java`
-(use-package lsp-java
-  :after (lsp-mode)
-  :config
-  (setq lsp-java-vmargs
-        `("-noverify"
-          "-Xmx2G"
-          "-XX:+UseG1GC"
-          "-XX:+UseStringDeduplication"
-          ,(concat "-javaagent:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))
-          ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))))
-  (setq lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
-  (setq lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
-  (setq lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache"))
-  :custom
-  (progn
-    (require 'lsp-java-boot)
-    (add-hook 'lsp-mode-hook 'lsp-lens-mode)
-    (add-hook 'java-mode-hook 'lsp-java-boot-lens-mode)))
-
-(use-package dap-java
-  :straight (dap-java :type git :host github :repo "emacs-lsp/lsp-java"))
-
-;; Package `kotlin`
-(use-package kotlin-mode
-  :mode "\\.kt$")
-
-;; Package `javascsript`
-(use-package js2-mode
-  :mode "\\.\\(m?js\\|es6\\)$"
-  :init
-  (setq-default js2-show-parse-errors nil
-                js2-strict-missing-semi-warning nil
-                js2-strict-inconsistent-return-warning nil
-                js2-strict-var-hides-function-arg-warning nil
-                js2-strict-cond-assign-warning nil
-                js2-strict-var-redeclaration-warning nil
-                js2-strict-trailing-comma-warning nil)
-
-  (setq js2-highlight-level 3)
-  (setq-default js2-basic-offset 2)
-  (setq js-indent-level 2)
-
-  :config
-  (add-hook 'js2-mode-hook (lambda () (flycheck-mode 1))))
-
-(use-package js2-refactor
-  :after js2-mode
-  :hook ((js2-mode . js2-refactor-mode)))
-
-(use-package nodejs-repl
-  :config
-  (add-hook 'js2-mode-hook
-            (lambda ()
-              (define-key js-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
-              (define-key js-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
-              (define-key js-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
-              (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
-              (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
-              (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl))))
-
-(use-package prettier-js
-  :commands prettier-js-mode
-  :hook ((json-mode
-          tsx-ts-mode
-          typescript-ts-mode) . prettier-js-mode))
-
-(use-package rjsx-mode
-  :mode "\\.js$"
-  :commands (rjsx-mode))
 
 (use-package css-mode
   :mode "\\.css$"
@@ -933,7 +960,7 @@ parses its input."
 
 (use-package web-mode
   :commands (web-mode)
-  :mode (("\\.html\\'" . web-mode))
+  :mode "\\.html$"
   :config
   (progn
   (setq web-mode-markup-indent-offset 4
