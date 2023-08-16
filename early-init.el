@@ -22,10 +22,11 @@
 
 
 ;; Silence compiler warnings
-(setq native-comp-async-report-warnings-errors nil)
+;(setq native-comp-async-report-warnings-errors nil)
 
 
 ;;; Bootstrap straight.el
+(setq straight-repository-branch "develop")
 (defvar bootstrap-version)
 
 (let ((bootstrap-file

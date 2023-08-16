@@ -239,6 +239,8 @@
 
 (setq treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (c "https://github.com/tree-sitter/tree-sitter-c")
+     (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
      (cmake "https://github.com/uyha/tree-sitter-cmake")
      (css "https://github.com/tree-sitter/tree-sitter-css")
      (elisp "https://github.com/Wilfred/tree-sitter-elisp")
@@ -274,16 +276,16 @@
 (use-package c++-mode
   :straight nil
   :custom
-  (add-to-list 'eglot-server-programs '((c++-mode) . ("clangd")))
+  (add-to-list 'eglot-server-programs '((c++-mode c++-ts-mode) . ("clangd")))
   :hook 
-  (c++-mode . eglot-ensure))
+  ((c++-mode c++-ts-mode) . eglot-ensure))
 
 (use-package c-mode
   :straight nil
   :custom
-  (add-to-list 'eglot-server-programs '((c-mode) . ("clangd")))
+  (add-to-list 'eglot-server-programs '((c-mode c-ts-mode) . ("clangd")))
   :hook
-  (c++-mode . eglot-ensure))
+  ((c-mode c-ts-mode) . eglot-ensure))
 
 
 
@@ -376,10 +378,23 @@
 
 (use-package swift-mode
   :mode "\\.swift$"
-  :custom
-  (add-to-list 'eglot-server-programs '((swift-mode) . ("xcrun" "sourcekit-lsp")))
+  :config
+  (require 'eglot)
+  (add-to-list 'eglot-server-programs '(swift-mode . ("xcrun" "sourcekit-lsp")))
   :hook
-  (swift-mode .eglot-ensure))
+  (swift-mode . eglot-ensure))
+
+
+;; -----------------------------------------------------------------------------
+;; Bash
+;; -----------------------------------------------------------------------------
+(use-package bash-mode
+  :straight nil
+  :mode ("\\.sh$" . bash-ts-mode)
+  :custom
+  (add-to-list 'eglot-server-programs '((bash-mode bash-ts-mode) . ("bash-language-server")))
+  :hook
+  ((bash-mode bash-ts-mode) . eglot-ensure))
 
 
 ;; -----------------------------------------------------------------------------
@@ -435,8 +450,6 @@
 ;; Package `kotlin`
 (use-package kotlin-mode
   :mode "\\.kt$")
-
-
 
 
 
