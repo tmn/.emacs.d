@@ -22,7 +22,7 @@
 
 
 ;; Silence compiler warnings
-;(setq native-comp-async-report-warnings-errors nil)
+(setq native-comp-async-report-warnings-errors nil)
 
 
 ;;; Bootstrap straight.el

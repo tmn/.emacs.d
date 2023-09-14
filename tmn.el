@@ -19,6 +19,18 @@
 
 (column-number-mode t)
 (global-hl-line-mode 1)
+(global-auto-revert-mode 1)
+(global-display-line-numbers-mode 1)
+`
+(save-place-mode 1)
+(setq use-dialog-box nil)
+
+
+;; -----------------------------------------------------------------------------
+;; Custom file
+;; -----------------------------------------------------------------------------
+(setq custom-file (locate-user-emacs-file "custom-vars.el"))
+(load custom-file 'noerror 'nomessage)
 
 
 ;; -----------------------------------------------------------------------------
@@ -140,7 +152,11 @@
   ; (load-theme 'doom-vibrant t)
   ; (load-theme 'doom-opera-light t)
   (load-theme 'modus-operandi t)
-  ; (disable-theme 'modus-operandi)
+  (load-theme 'doom-palenight t)
+  ; (load-theme 'leuven t)
+  ; (load-theme 'doom-one-light t)
+  ;; (load-theme 'one-light t)
+  (disable-theme 'modus-operandi)
 
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
@@ -161,6 +177,7 @@
         doom-modeline-buffer-encoding nil
         doom-modeline-indent-info nil
         doom-modeline-env-version t))
+
 
 ;; Display Emojis in emacs
 (use-package emojify
@@ -584,10 +601,53 @@
 ;; Window stuff
 ;;
 
+(defun t/org-present-prepare-slide ()
+  (org-overview)
+  (org-show-entry)
+  (org-show-children))
+
 (defun t/org-mode-visual-fill ()
   (setq visual-fill-column-width 110
-        visual-fill-column-center-text t)
+        visual-fill-column-center-text t
+        display-line-numbers-mode nil)
   (visual-fill-column-mode 1))
+
+(defun t/org-present-start ()
+  ;; Center the presentation and wrap lines
+  ;; (visual-fill-column-mode 1)
+
+
+  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
+                                     (header-line (:height 4.5) variable-pitch)
+                                     (org-code (:height 1.55) org-code)
+                                     (org-verbatim (:height 1.55) org-verbatim)
+                                     (org-block (:height 1.25) org-block)
+                                     (org-block-begin-line (:height 0.7) org-block)))
+  (setq header-line-format " ")
+
+  ;; (visual-line-mode 1)
+  (org-display-inline-images)
+  (t/org-present-prepare-slide))
+
+(defun t/org-present-end ()
+  ;; Center the presentation and wrap lines
+  ;; (visual-fill-column-mode 0)
+  ;; (visual-line-mode 0)
+  (setq-local face-remapping-alist '((default variable-pitch default)))
+  (setq header-line-format nil)
+
+  (org-present-small)
+  (org-remove-inline-images))
+
+(defun t/org-present-prev ()
+  (interactive)
+  (org-present-prev)
+  (t/org-present-prepare-slide))
+
+(defun t/org-present-next ()
+  (interactive)
+  (org-present-next)
+  (t/org-present-prepare-slide))
 
 (use-package visual-fill-column
   :defer t
@@ -1018,7 +1078,8 @@ parses its input."
   (variable-pitch-mode 1)
   (auto-fill-mode 0)
   (visual-line-mode 1)
-  (diminish org-indent-mode))
+  (diminish org-indent-mode)
+  (display-line-numbers-mode 0))
 
 (use-package org
   :straight (:type built-in)
@@ -1052,6 +1113,13 @@ parses its input."
 
   (setq org-outline-path-complete-in-steps nil)
   (setq org-refile-use-outline-path t)
+
+  (use-package org-present
+    :bind (:map org-present-mode-keymap
+                ("C-c C-j" . t/org-present-next)
+                ("C-c C-k" . t/org-present-prev))
+    :hook ((org-present-mode . t/org-present-start)
+           (org-present-mode-quit . t/org-present-end)))
 
   (use-package org-superstar
     :after org
@@ -1122,7 +1190,6 @@ parses its input."
   :config
   (setq tab-width 4
         qml-indent-width 4))
-
 
 (use-package csharp-mode
   :commands (csharp-tree-sitter-mode)
