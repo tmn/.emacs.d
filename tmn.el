@@ -20,10 +20,11 @@
 (column-number-mode t)
 (global-hl-line-mode 1)
 (global-auto-revert-mode 1)
-(global-display-line-numbers-mode 1)
-`
+
 (save-place-mode 1)
 (setq use-dialog-box nil)
+
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
 
 ;; -----------------------------------------------------------------------------
@@ -69,9 +70,16 @@
 ;; Configure fonts
 ;; -----------------------------------------------------------------------------
 
+;; Set reusable font name variables
+(defvar t/fixed-width-font "SF Mono"
+  "The font to use for monospaced (fixed width) text.")
+
+(defvar t/variable-width-font "Iosevka Aile"
+  "The font to use for variable-pitch (document) text.")
+
 (cond
  ((find-font (font-spec :family "SF Mono"))
-  (set-frame-font "SF Mono:pixelsize=12"))
+  (set-frame-font "SF Mono:pixelsize=13"))
  ((find-font (font-spec :family "Fira Code Retina"))
   (set-frame-font "Fira Code Retina:pixelsize=12"))
  ((find-font (font-spec :family "Menlo"))
@@ -152,11 +160,13 @@
   ; (load-theme 'doom-vibrant t)
   ; (load-theme 'doom-opera-light t)
   (load-theme 'modus-operandi t)
-  (load-theme 'doom-palenight t)
+  ; (load-theme 'doom-palenight t)
   ; (load-theme 'leuven t)
   ; (load-theme 'doom-one-light t)
-  ;; (load-theme 'one-light t)
-  (disable-theme 'modus-operandi)
+  ; (load-theme 'one-light t)
+  ; (disable-theme 'modus-operandi)
+  ; (disable-theme 'doom-palenight)
+  ; (disable-theme 'doom-vibrant)
 
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
@@ -597,61 +607,6 @@
          ("M-9" . winum-select-window-9)))
 
 
-;;
-;; Window stuff
-;;
-
-(defun t/org-present-prepare-slide ()
-  (org-overview)
-  (org-show-entry)
-  (org-show-children))
-
-(defun t/org-mode-visual-fill ()
-  (setq visual-fill-column-width 110
-        visual-fill-column-center-text t
-        display-line-numbers-mode nil)
-  (visual-fill-column-mode 1))
-
-(defun t/org-present-start ()
-  ;; Center the presentation and wrap lines
-  ;; (visual-fill-column-mode 1)
-
-
-  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
-                                     (header-line (:height 4.5) variable-pitch)
-                                     (org-code (:height 1.55) org-code)
-                                     (org-verbatim (:height 1.55) org-verbatim)
-                                     (org-block (:height 1.25) org-block)
-                                     (org-block-begin-line (:height 0.7) org-block)))
-  (setq header-line-format " ")
-
-  ;; (visual-line-mode 1)
-  (org-display-inline-images)
-  (t/org-present-prepare-slide))
-
-(defun t/org-present-end ()
-  ;; Center the presentation and wrap lines
-  ;; (visual-fill-column-mode 0)
-  ;; (visual-line-mode 0)
-  (setq-local face-remapping-alist '((default variable-pitch default)))
-  (setq header-line-format nil)
-
-  (org-present-small)
-  (org-remove-inline-images))
-
-(defun t/org-present-prev ()
-  (interactive)
-  (org-present-prev)
-  (t/org-present-prepare-slide))
-
-(defun t/org-present-next ()
-  (interactive)
-  (org-present-next)
-  (t/org-present-prepare-slide))
-
-(use-package visual-fill-column
-  :defer t
-  :hook (org-mode . t/org-mode-visual-fill))
 
 ;; -----------------------------------------------------------------------------
 ;; Dired
@@ -1071,12 +1026,81 @@ parses its input."
 ;; -----------------------------------------------------------------------------
 ;; Package org-mode
 ;; -----------------------------------------------------------------------------
+
+
+;; NOTE: These settings might not be ideal for your machine, tweak them as needed!
+(set-face-attribute 'default nil :font t/fixed-width-font :weight 'regular :height 130)
+(set-face-attribute 'fixed-pitch nil :font t/fixed-width-font :weight 'light :height 190)
+(set-face-attribute 'variable-pitch nil :font t/variable-width-font :weight 'light :height 1.3)
+
+
+;;; Org Mode Appearance ------------------------------------
+
+
+(defun t/org-present-prepare-slide ()
+  (org-overview)
+  (org-show-entry)
+  (org-show-children))
+
+(defun t/org-mode-visual-fill ()
+  (setq visual-fill-column-width 110
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(defun t/org-present-start ()
+  (disable-theme 'modus-operandi)
+  (load-theme 'doom-palenight t)
+
+  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
+                                     (header-line (:height 4.5) variable-pitch)
+                                     (org-code (:height 1.55) org-code)
+                                     (org-verbatim (:height 1.55) org-verbatim)
+                                     (org-block (:height 1.25) org-block)
+                                     (org-block-begin-line (:height 0.7) org-block)))
+  (setq header-line-format " ")
+
+  (org-display-inline-images)
+
+  ;; (disable-theme 'modus-operandi)
+  ;; (load-theme 'doom-vibrant t)
+)
+
+(defun t/org-present-end ()
+  (disable-theme 'doom-palenight)
+  (load-theme 'modus-operandi t)
+
+  (setq-local face-remapping-alist '((default variable-pitch default)))
+  (setq header-line-format nil)
+
+  ; (org-present-small)
+
+  (org-remove-inline-images)
+
+  (disable-theme 'doom-vibrant)
+  (load-theme 'modus-operandi t)
+)
+
+(defun t/org-present-prev ()
+  (interactive)
+  (org-present-prev)
+  (t/org-present-prepare-slide))
+
+(defun t/org-present-next ()
+  (interactive)
+  (org-present-next)
+  (t/org-present-prepare-slide))
+
+(use-package visual-fill-column
+  :defer t
+  :hook (org-mode . t/org-mode-visual-fill))
+
 (defun t/org-mode-setup ()
   "..."
   (interactive)
   (org-indent-mode)
   (variable-pitch-mode 1)
   (auto-fill-mode 0)
+  (visual-fill-column-mode 1)
   (visual-line-mode 1)
   (diminish org-indent-mode)
   (display-line-numbers-mode 0))
@@ -1119,7 +1143,8 @@ parses its input."
                 ("C-c C-j" . t/org-present-next)
                 ("C-c C-k" . t/org-present-prev))
     :hook ((org-present-mode . t/org-present-start)
-           (org-present-mode-quit . t/org-present-end)))
+           (org-present-mode-quit . t/org-present-end)
+           (org-present-after-navigate-functions . t/org-present-prepare-slide)))
 
   (use-package org-superstar
     :after org
@@ -1129,8 +1154,20 @@ parses its input."
     (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 
-  (set-face-attribute 'org-document-title nil :font "SF Mono" :weight 'bold :height 1.3)
+;;; Org Mode Appearance ------------------------------------
 
+  ;; NOTE: These settings might not be ideal for your machine, tweak them as needed!
+  (set-face-attribute 'default nil :font t/fixed-width-font :weight 'regular :height 130)
+  (set-face-attribute 'fixed-pitch nil :font t/fixed-width-font :weight 'light :height 190)
+  (set-face-attribute 'variable-pitch nil :font t/variable-width-font :weight 'light :height 1.3)
+
+  ;; Load org-faces to make sure we can set appropriate faces
+  (require 'org-faces)
+
+  ;; Hide emphasis markers on formatted text
+  (setq org-hide-emphasis-markers t)
+
+  ;; Resize Org headings
   (dolist (face '((org-level-1 . 1.2)
                   (org-level-2 . 1.1)
                   (org-level-3 . 1.05)
@@ -1139,7 +1176,10 @@ parses its input."
                   (org-level-6 . 1.1)
                   (org-level-7 . 1.1)
                   (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "SF Mono" :weight 'medium :height (cdr face)))
+    (set-face-attribute (car face) nil :font t/variable-width-font :weight 'medium :height (cdr face)))
+
+  ;; Make the document title a bit bigger
+  (set-face-attribute 'org-document-title nil :font t/variable-width-font :weight 'bold :height 1.3)
 
   (require 'org-indent)
 
