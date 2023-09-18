@@ -24,7 +24,11 @@
 (save-place-mode 1)
 (setq use-dialog-box nil)
 
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(defun t/my-prog-mode ()
+  (display-line-numbers-mode 1)
+  (set-fringe-mode 10))
+
+(add-hook 'prog-mode-hook 't/my-prog-mode)
 
 
 ;; -----------------------------------------------------------------------------
@@ -52,8 +56,6 @@
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (tooltip-mode -1)
-
-(set-fringe-mode 0)
 
 (setq visible-bell t)
 
@@ -260,9 +262,23 @@
           which-key-idle-delay 0.5)
     (which-key-mode)))
 
-(use-package hydra)
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
 
-
+(use-package winum
+  :init
+  (winum-mode)
+  :bind (("C-x w `" . winum-select-window-by-number)
+         ("M-0" . winum-select-window-0-or-10)
+         ("M-1" . winum-select-window-1)
+         ("M-2" . winum-select-window-2)
+         ("M-3" . winum-select-window-3)
+         ("M-4" . winum-select-window-4)
+         ("M-5" . winum-select-window-5)
+         ("M-6" . winum-select-window-6)
+         ("M-7" . winum-select-window-7)
+         ("M-8" . winum-select-window-8)
+         ("M-9" . winum-select-window-9)))
 
 ;; -----------------------------------------------------------------------------
 ;; Projectile
@@ -462,23 +478,6 @@
   ((bash-mode bash-ts-mode) . eglot-ensure))
 
 
-;; -----------------------------------------------------------------------------
-;; Python
-;; -----------------------------------------------------------------------------
-(use-package python-mode
-  :custom
-  (python-shell-interpreter "python3"))
-
-;; (use-package lsp-pyright
-;;   :after (python-mode)
-;;   :config
-;;   (defun t/python-mode ()
-;;     (interactive)
-;;     (require 'lsp-pyright)
-;;     (eglot-ensure))
-;;   :hook
-;;   (python-mode . t/python-mode))
-
 
 ;; -----------------------------------------------------------------------------
 ;; Java / Kotlin / JVM
@@ -500,9 +499,9 @@
           "-XX:+UseStringDeduplication"
           ,(concat "-javaagent:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))
           ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.emacs.d/lib/lombok.jar"))))
-  (setq lsp-java-server-install-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/server/"))
-  (setq lsp-java-workspace-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace"))
-  (setq lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/eclipse.jdt.ls/workspace-cache"))
+  (setq lsp-java-server-install-dir (expand-file-name "~/.emacs.d/lsp/eclipse.jdt.ls/server/"))
+  (setq lsp-java-workspace-dir (expand-file-name "~/.emacs.d/lsp/eclipse.jdt.ls/workspace"))
+  (setq lsp-java-workspace-cache-dir (expand-file-name "~/.emacs.d/lsp/eclipse.jdt.ls/workspace-cache"))
   :custom
   (progn
     (require 'lsp-java-boot)
@@ -519,12 +518,9 @@
 
 
 ;;------------------------------------------------------------------------------
-;;------------------------------------------------------------------------------
-
-
-
 ;; LSP mode
 ;;------------------------------------------------------------------------------
+
 (use-package lsp-mode
   :commands lsp
   :init
@@ -543,7 +539,7 @@
   ;; (lsp-completion-provider :capf)
   (lsp-completion-provider :none)
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-idle-delay 0.5)
+  (lsp-idle-delay 0.2)
 
   (lsp-eldoc-render-all t)
   (lsp-idle-delay 0.6)
@@ -564,13 +560,13 @@
                          "[/\\\\]coverage\\'"
                          "[/\\\\].DS_Store"))
     (push directories lsp-file-watch-ignored))
-  :hook (
-         (lsp-completion-mode . t/lsp-mode-setup-completion)
+  :hook ((lsp-completion-mode . t/lsp-mode-setup-completion)
          ((java-mode
            python-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
   :commands (lsp-ui-mode
              lsp-ui-doc-show
              lsp-ui-doc-hide)
@@ -599,19 +595,24 @@
     (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
     (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)))
 
+(use-package hydra)
+
+(use-package lsp-treemacs
+  :after lsp-mode
+  :commands lsp-treemacs-errors-list)
 
 (use-package dap-mode
+  :after lsp-mode
   :config
   (setq dap-auto-configure-features '(sessions locals controls tooltip))
-  (progn
-    (dap-auto-configure-mode t)
-    (dap-mode t)
-    (dap-ui-mode t)
-    (dap-tooltip-mode t)
-    (tooltip-mode t)
-    (dap-ui-controls-mode t))
+
+  (require 'dap-hydra)
+
   (require 'dap-lldb)
-  (require 'dap-cpptools))
+  (require 'dap-cpptools)
+
+  (require 'dap-python)
+  (setq dap-python-debugger 'debugpy))
 
 (use-package flycheck
   :demand t
@@ -630,20 +631,31 @@
   ;;                                           flycheck-clang-language-standard "c++14")))
 )
 
-(use-package winum
-  :init
-  (winum-mode)
-  :bind (("C-x w `" . winum-select-window-by-number)
-         ("M-0" . winum-select-window-0-or-10)
-         ("M-1" . winum-select-window-1)
-         ("M-2" . winum-select-window-2)
-         ("M-3" . winum-select-window-3)
-         ("M-4" . winum-select-window-4)
-         ("M-5" . winum-select-window-5)
-         ("M-6" . winum-select-window-6)
-         ("M-7" . winum-select-window-7)
-         ("M-8" . winum-select-window-8)
-         ("M-9" . winum-select-window-9)))
+
+;; -----------------------------------------------------------------------------
+;; Python
+;; -----------------------------------------------------------------------------
+(use-package python-mode
+  :hook (python-mode . lsp-deferred)
+  :custom
+  (python-shell-interpreter "python3")
+  (dap-python-debugger 'debugpy)
+  :config
+  (require 'dap-python))
+
+(use-package pyvenv
+  :config
+  (pyvenv-mode 1))
+
+(use-package lsp-pyright
+  :config
+  (defun t/python-mode ()
+    (interactive)
+    (require 'lsp-pyright)
+    (lsp-deferred))
+
+  (add-hook 'python-mode-hook 't/python-mode))
+
 
 
 
