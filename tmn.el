@@ -52,7 +52,8 @@
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (tooltip-mode -1)
-(set-fringe-mode 10)
+
+(set-fringe-mode 0)
 
 (setq visible-bell t)
 
@@ -69,6 +70,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Configure fonts
 ;; -----------------------------------------------------------------------------
+
 
 ;; Set reusable font name variables
 (defvar t/fixed-width-font "SF Mono"
@@ -151,6 +153,42 @@
   :hook ((text-mode . ws-butler-mode)
          (prog-mode . ws-butler-mode)))
 
+;; -----------------------------------------------------------------------------
+;; Configure themes
+;; -----------------------------------------------------------------------------
+
+(use-package modus-themes
+  :config
+  (setq modus-themes-common-palette-overrides '(
+                                                (border-mode-line-active unspecified)
+                                                (border-mode-line-inactive unspecified)
+
+                                                ;; (bg-paren-match bg-magenta-intense)
+                                                ;; (underline-paren-match fg-main)
+                                                ))
+
+  (setq modus-themes-bold-constructs t
+        modus-themes-italic-constructs t)
+
+  (setq modus-themes-prompts '(extrabold italic))
+
+  (setq modus-themes-completions
+      '((matches . (extrabold underline))
+        (selection . (semibold italic))))
+
+  (setq modus-themes-org-blocks '(tinted-background))
+
+
+
+
+  ;; (setq modus-themes-italic-constructs t
+  ;;       modus-themes-bold-constructs nil)
+
+  (load-theme 'modus-operandi t)
+
+  (define-key global-map (kbd "<f5>") #'modus-themes-toggle)
+  (define-key global-map (kbd "<f6>") #'blink-cursor-mode))
+
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t
@@ -159,7 +197,7 @@
 
   ; (load-theme 'doom-vibrant t)
   ; (load-theme 'doom-opera-light t)
-  (load-theme 'modus-operandi t)
+
   ; (load-theme 'doom-palenight t)
   ; (load-theme 'leuven t)
   ; (load-theme 'doom-one-light t)
@@ -431,15 +469,15 @@
   :custom
   (python-shell-interpreter "python3"))
 
-(use-package lsp-pyright
-  :after (python-mode)
-  :config
-  (defun t/python-mode ()
-    (interactive)
-    (require 'lsp-pyright)
-    (eglot-ensure))
-  :hook
-  (python-mode . t/python-mode))
+;; (use-package lsp-pyright
+;;   :after (python-mode)
+;;   :config
+;;   (defun t/python-mode ()
+;;     (interactive)
+;;     (require 'lsp-pyright)
+;;     (eglot-ensure))
+;;   :hook
+;;   (python-mode . t/python-mode))
 
 
 ;; -----------------------------------------------------------------------------
@@ -528,7 +566,8 @@
     (push directories lsp-file-watch-ignored))
   :hook (
          (lsp-completion-mode . t/lsp-mode-setup-completion)
-         ((java-mode) . lsp-deferred)
+         ((java-mode
+           python-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 (use-package lsp-ui
@@ -1112,7 +1151,10 @@ parses its input."
               ("C-j" . org-next-visible-heading)
               ("C-k" . org-previous-visible-heading)
               ("M-j" . org-metadown)
-              ("M-k" . org-metaup))
+              ("M-k" . org-metaup)
+              ("C-s-<right>" . org-agenda-todo-nextset)
+              ("C-s-<left>" . org-agenda-todo-previousset)
+              )
   :config
   (setq org-ellipsis " ▾"
         org-hide-emphasis-markers t
@@ -1151,7 +1193,8 @@ parses its input."
     :hook (org-mode . org-superstar-mode)
     :custom
     (org-superstar-remove-leading-stars t)
-    (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●")))
+    ;; (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●"))
+    )
 
 
 ;;; Org Mode Appearance ------------------------------------
