@@ -1321,4 +1321,6 @@ parses its input."
 (use-package vterm)
 (use-package multi-vterm)
 
+
+(use-package jsonnet-mode)
 ;;; tmn.el ends here
