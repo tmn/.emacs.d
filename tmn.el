@@ -180,13 +180,17 @@
 
   (setq modus-themes-org-blocks '(tinted-background))
 
-
-
-
   ;; (setq modus-themes-italic-constructs t
   ;;       modus-themes-bold-constructs nil)
 
   ; (load-theme 'modus-operandi t)
+  ; (disable-theme 'modus-operandi)
+
+  ; (load-theme 'modus-vivendi-tinted t)
+  ; (disable-theme 'modus-vivendi-tinted)
+
+  ; (load-theme 'modus-vivendi t)
+  ; (disable-theme 'modus-vivendi)
 
   (define-key global-map (kbd "<f5>") #'modus-themes-toggle)
   (define-key global-map (kbd "<f6>") #'blink-cursor-mode))
@@ -198,17 +202,22 @@
         doom-themes-padded-modeline nil)
 
   (load-theme 'doom-vibrant t)
+  ; (disable-theme 'doom-vibrant)
+
   ; (load-theme 'doom-opera-light t)
+  ; (disable-theme 'doom-opera-light)
+
+  ; (load-theme 'doom-one-light t)
+  ; (disable-theme 'doom-one-light)
+
+  ; (load-theme 'modus-operandi t)
+  ; (disable-theme 'modus-operandi)
 
   ; (load-theme 'doom-palenight t)
-  ; (load-theme 'leuven t)
-  ; (load-theme 'doom-one-light t)
-  ; (load-theme 'one-light t)
-  ; (disable-theme 'modus-operandi)
+  ; (disable-theme 'doom-palenight)
+
   ; (load-theme 'doom-palenight t)
   ; (disable-theme 'doom-palenight)
-  ; (disable-theme 'doom-palenight)
-  ; (disable-theme 'doom-vibrant)
 
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
