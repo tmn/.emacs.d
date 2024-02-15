@@ -186,7 +186,7 @@
   ;; (setq modus-themes-italic-constructs t
   ;;       modus-themes-bold-constructs nil)
 
-  (load-theme 'modus-operandi t)
+  ; (load-theme 'modus-operandi t)
 
   (define-key global-map (kbd "<f5>") #'modus-themes-toggle)
   (define-key global-map (kbd "<f6>") #'blink-cursor-mode))
@@ -197,7 +197,7 @@
         doom-themes-enable-italic t
         doom-themes-padded-modeline nil)
 
-  ; (load-theme 'doom-vibrant t)
+  (load-theme 'doom-vibrant t)
   ; (load-theme 'doom-opera-light t)
 
   ; (load-theme 'doom-palenight t)
@@ -205,6 +205,8 @@
   ; (load-theme 'doom-one-light t)
   ; (load-theme 'one-light t)
   ; (disable-theme 'modus-operandi)
+  ; (load-theme 'doom-palenight t)
+  ; (disable-theme 'doom-palenight)
   ; (disable-theme 'doom-palenight)
   ; (disable-theme 'doom-vibrant)
 
@@ -1099,7 +1101,7 @@ parses its input."
   (visual-fill-column-mode 1))
 
 (defun t/org-present-start ()
-  (disable-theme 'modus-operandi)
+  (disable-theme 'doom-vibrant)
   (load-theme 'doom-palenight t)
 
   (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
@@ -1110,26 +1112,18 @@ parses its input."
                                      (org-block-begin-line (:height 0.7) org-block)))
   (setq header-line-format " ")
 
-  (org-display-inline-images)
-
-  ;; (disable-theme 'modus-operandi)
-  ;; (load-theme 'doom-vibrant t)
-)
+  (org-display-inline-images))
 
 (defun t/org-present-end ()
   (disable-theme 'doom-palenight)
-  (load-theme 'modus-operandi t)
+  (load-theme 'doom-vibrant t)
 
   (setq-local face-remapping-alist '((default variable-pitch default)))
   (setq header-line-format nil)
 
   ; (org-present-small)
 
-  (org-remove-inline-images)
-
-  (disable-theme 'doom-vibrant)
-  (load-theme 'modus-operandi t)
-)
+  (org-remove-inline-images))
 
 (defun t/org-present-prev ()
   (interactive)
