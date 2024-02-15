@@ -1310,4 +1310,7 @@ parses its input."
 
 (use-package restclient)
 
+(use-package vterm)
+(use-package multi-vterm)
+
 ;;; tmn.el ends here
