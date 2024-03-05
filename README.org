@@ -1,0 +1,110 @@
+* ~/.config/doom
+
+** Dependencies
+
+*** Using brew
+
+#+begin_src sh
+brew install \
+fd \
+glslang \
+isort \
+pipenv \
+tidy
+
+#+end_src
+
+*** Using apt
+
+#+begin_src sh
+sudo apt install \
+fd \
+glslang-dev \
+isort \
+pipenv \
+tidy
+#+end_src
+
+
+
+*** Node setup and dependencies
+
+**** Setup npm globals
+
+#+begin_src sh
+mkdir ~/.npm-globals
+npm config set prefix '~/.npm-globals'
+#+end_src
+
+
+Edit *.profile/.bashrc/.zprofile/.zshrc* and add:
+
+#+begin_src sh
+if [ -d "$HOME/.npm-globals/bin" ] ; then
+    PATH=~/.npm-globals/bin:$PATH
+fi
+#+end_src
+
+**** npm dependencies
+
+#+begin_src sh
+node install -g \
+pyright \
+prettier
+#+end_src
+
+*** Python
+
+**** Configure python/pip
+
+Add this to =~/.config/pip/pip.conf=
+
+#+begin_src toml
+[global]
+break-system-packages = true
+#+end_src
+
+
+**** Install pip packages
+
+#+begin_src sh
+python3 -m pip install -U \
+    pytest \
+    nose2
+#+end_src
+
+** Environment stuff
+
+*** Linux: Add ~/.local/bin to PATH
+
+#+begin_src sh
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+#+end_src
+
+** Building emacs from source
+
+Building emacs 29
+
+*** Dependencies
+
+- autoconf
+- coreutils
+- gcc
+- gnu-sed
+- gnutls
+- gpg
+- gpg-config
+- imagemagick
+- jansson
+- libgccjit
+- librsvg
+- libxml2
+- ncurses
+- texinfo
+- tree-sitter
+
+*** Build script
+
+Build script is located in ~./scripts/build.sh~
