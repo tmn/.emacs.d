@@ -65,3 +65,6 @@
 (package! nerd-icons)
 (package! nerd-icons-dired)
 (package! nerd-icons-completion)
+
+;; Pin versin 9 of lsp-mode
+(package! lsp-mode :pin "a478e03")

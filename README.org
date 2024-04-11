@@ -10,7 +10,17 @@ fd \
 glslang \
 isort \
 pipenv \
-tidy
+tidy \
+ktlint \
+grep \
+gopls \
+gomodifytags \
+gotests \
+ansible \
+shellcheck
+
+go install github.com/x-motemen/gore/cmd/gore@latest
+
 
 #+end_src
 
@@ -48,9 +58,11 @@ fi
 **** npm dependencies
 
 #+begin_src sh
-node install -g \
+npm install -g \
 pyright \
-prettier
+prettier \
+stylelint \
+js-beautify
 #+end_src
 
 *** Python
