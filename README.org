@@ -10,18 +10,21 @@ fd \
 glslang \
 isort \
 pipenv \
-tidy \
 ktlint \
 grep \
 gopls \
 gomodifytags \
 gotests \
 ansible \
-shellcheck
+shellcheck \
+markdown
 
 go install github.com/x-motemen/gore/cmd/gore@latest
 
+*** Install Cargo dependencies
 
+#+begin_src sh
+cargo install --features pcre2 ripgrep
 #+end_src
 
 *** Using apt
@@ -97,7 +100,7 @@ fi
 
 ** Building emacs from source
 
-Building emacs 29
+Building emacs 29.3
 
 *** Dependencies
 

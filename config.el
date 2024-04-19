@@ -29,6 +29,8 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-one)
+(setq doom-font (font-spec :family "Fira Code" :size 13 :weight 'semi-light))
+
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -84,22 +86,40 @@
 
 (map!
  "C-s" 'consult-line
- "C-x C-n" 'dired-sidebar-toggle-sidebar)
+ "C-x C-b" 'consult-buffer
+ "C-c o p" 'dired-sidebar-toggle-sidebar
+ "C-c o m" 'magit)
 
 
-;; LSP: Python
+;;; LSP: Python
 (use-package! lsp-pyright
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
                          (lsp-deferred))))
 
-;; Nerd Icons
-(use-package! nerd-icons-completion
-  :config
-  (nerd-icons-completion-mode))
+;;; Nerd Icons
+;; (use-package! nerd-icons-completion
+;;   :config
+;;   (nerd-icons-completion-mode))
+
+;;; Winum
+(use-package! winum
+  :init
+  (winum-mode)
+  :bind (("C-x w `" . winum-select-window-by-number)
+         ("M-0" . winum-select-window-0-or-10)
+         ("M-1" . winum-select-window-1)
+         ("M-2" . winum-select-window-2)
+         ("M-3" . winum-select-window-3)
+         ("M-4" . winum-select-window-4)
+         ("M-5" . winum-select-window-5)
+         ("M-6" . winum-select-window-6)
+         ("M-7" . winum-select-window-7)
+         ("M-8" . winum-select-window-8)
+         ("M-9" . winum-select-window-9)))
 
 
-;; Dired
+;;; Dired
 (use-package! dired
   :defer 1
   :commands (dired dired-jump)
@@ -195,3 +215,37 @@
               ("y" . dired-ranger-copy)
               ("X" . dired-ranger-move)
               ("p" . dired-ranger-paste)))
+
+
+
+
+;;; LSP Booster
+
+(defun lsp-booster--advice-json-parse (old-fn &rest args)
+  "Try to parse bytecode instead of json."
+  (or
+   (when (equal (following-char) ?#)
+     (let ((bytecode (read (current-buffer))))
+       (when (byte-code-function-p bytecode)
+         (funcall bytecode))))
+   (apply old-fn args)))
+(advice-add (if (progn (require 'json)
+                       (fboundp 'json-parse-buffer))
+                'json-parse-buffer
+              'json-read)
+            :around
+            #'lsp-booster--advice-json-parse)
+
+(defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+  "Prepend emacs-lsp-booster command to lsp CMD."
+  (let ((orig-result (funcall old-fn cmd test?)))
+    (if (and (not test?)                             ;; for check lsp-server-present?
+             (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+             lsp-use-plists
+             (not (functionp 'json-rpc-connection))  ;; native json-rpc
+             (executable-find "emacs-lsp-booster"))
+        (progn
+          (message "Using emacs-lsp-booster for %s!" orig-result)
+          (cons "emacs-lsp-booster" orig-result))
+      orig-result)))
+(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)

@@ -51,6 +51,7 @@
 
 (package! lsp-pyright)
 (package! exec-path-from-shell)
+(package! winum)
 
 ;; Dired
 (package! dired-sidebar)
