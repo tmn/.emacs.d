@@ -280,7 +280,7 @@
   :init
   (winum-mode)
   :bind (("C-x w `" . winum-select-window-by-number)
-         ("M-0" . winum-select-window-0-or-10)
+         ("M-0" . treemacs-select-window)
          ("M-1" . winum-select-window-1)
          ("M-2" . winum-select-window-2)
          ("M-3" . winum-select-window-3)
@@ -296,22 +296,36 @@
 ;; -----------------------------------------------------------------------------
 
 (use-package projectile
-  :commands (projectile-mode projectile-project-root projectile-find-file)
-  :config
+  :commands (projectile-mode
+             projectile-project-root
+             projectile-find-file)
+  :init
   (projectile-mode +1)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  :bind (:map projectile-mode-map
+              ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map))
+  :config
+  (setq projectile-project-search-path '("~/src/"))
+
   (setq projectile-require-project-root nil
         projectile-mode-line '(:eval (format "[%s]" (projectile-project-name)))
-        projectile-cache-file (locate-user-emacs-file ".cache/projectile.cache")
         projectile-known-projects-file (locate-user-emacs-file ".cache/projectile.projects")
         projectile-enable-caching t
+        projectile-cache-file (locate-user-emacs-file ".cache/projectile.cache")
         projectile-indexing-method 'native)
+  (setq projectile-enable-cmake-presets t)
 
   (setq projectile-globally-ignored-directories
         (append '("*.gradle" "*.log" ".cache" ".git" ".idea" "node_modules" ".next" "elpa-backups" "build" "dist" "target") projectile-globally-ignored-directories)
 
         projectile-globally-ignored-files
         (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "projectile.cache") projectile-globally-ignored-files)
+
+        projectile-globally-ignored-buffers
+        (append '("*scratch*" "*lsp-log*"))
+
+        projectile-globally-ignored-modes
+        (append '("help-mode" "Buffer-menu-mode" "completion-list-mode" "erc-mode"))
 
         grep-find-ignored-files
         (append '("*.bundle.js" "*.build.js" "*.bundle.css" ".DS_Store" "*.min.js" "*.min.css" "package-lock.json" "node_modules/*" ".cache/*" "./gradle/*") grep-find-ignored-files)))
@@ -372,7 +386,7 @@
         c-basic-offset 4)
   :custom
   (add-to-list 'eglot-server-programs '((c++-mode c++-ts-mode) . ("clangd")))
-  :hook 
+  :hook
   ((c++-mode c++-ts-mode) . eglot-ensure))
 
 (use-package c-mode
@@ -582,6 +596,38 @@
            python-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
+
+;;; LSP Booster
+
+(defun lsp-booster--advice-json-parse (old-fn &rest args)
+  "Try to parse bytecode instead of json."
+  (or
+   (when (equal (following-char) ?#)
+     (let ((bytecode (read (current-buffer))))
+       (when (byte-code-function-p bytecode)
+         (funcall bytecode))))
+   (apply old-fn args)))
+(advice-add (if (progn (require 'json)
+                       (fboundp 'json-parse-buffer))
+                'json-parse-buffer
+              'json-read)
+            :around
+            #'lsp-booster--advice-json-parse)
+
+(defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+  "Prepend emacs-lsp-booster command to lsp CMD."
+  (let ((orig-result (funcall old-fn cmd test?)))
+    (if (and (not test?)                             ;; for check lsp-server-present?
+             (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+             lsp-use-plists
+             (not (functionp 'json-rpc-connection))  ;; native json-rpc
+             (executable-find "emacs-lsp-booster"))
+        (progn
+          (message "Using emacs-lsp-booster for %s!" orig-result)
+          (cons "emacs-lsp-booster" orig-result))
+      orig-result)))
+(advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
   :commands (lsp-ui-mode
@@ -613,6 +659,11 @@
     (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)))
 
 (use-package hydra)
+
+(use-package treemacs
+  :bind (("C-c o p" . treemacs))
+  :config
+  (treemacs-git-mode 'deferred))
 
 (use-package lsp-treemacs
   :after lsp-mode
@@ -750,7 +801,7 @@
   (use-package dired-sidebar
     :defer t
     :commands (dired-sidebar-toggle-sidebar)
-    :bind ("C-x C-n" . dired-sidebar-toggle-sidebar)
+    :bind ("C-c o [" . dired-sidebar-toggle-sidebar)
     :init
     (setq dired-sidebar-window-fixed nil)
     :config
@@ -893,6 +944,12 @@
                                                "  ")
                                              cand))))
 
+(use-package recentf
+  :bind ("C-x C-r" . recentf-open-files)
+  :hook (after-init . recentf-mode)
+  :config
+  (setq recentf-max-menu-items 25
+        recentf-max-saved-items 500))
 
 (defun t/get-project-root ()
   "Get project root."
@@ -904,9 +961,9 @@
          ("C-x C-b" . consult-buffer)
          ("C-s" . consult-line)
          ("C-M-l" . consult-imenu)
-         ("C-x C-p" . consult-ripgrep)
+         ("C-c p s" . consult-ripgrep)
          :map minibuffer-local-map
-         ("C-r" . consult-history))
+         ("C-h" . consult-history))
 
 
   :custom
@@ -917,12 +974,19 @@
 
 (use-package consult-projectile
   :after consult
-  :bind (("C-x C-o" . consult-projectile-find-file)))
+  :bind (("C-c p f" . consult-projectile-find-file)))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
+  :init
+  (setq savehist-file "~/.emacs.d/savehist")
   :config
-  (setq history-length 25)
+  (setq savehist-additional-variables '(search-ring regexp-search-ring)
+        history-length 300
+        savehist-autosave-interval 60
+        history-length t
+        history-delete-duplicates t
+        savehist-save-minibuffer-history 1)
   (savehist-mode 1))
 
 
@@ -1029,7 +1093,7 @@ parses its input."
 ;; -----------------------------------------------------------------------------
 (use-package magit
   :commands magit-status
-  :bind (("C-c o g" . magit-status))
+  :bind (("C-c o m" . magit-status))
   :config
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
