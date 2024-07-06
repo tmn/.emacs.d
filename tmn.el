@@ -384,20 +384,20 @@
   :init
   (setq c-default-style "linux"
         c-basic-offset 4)
-  :custom
-  (add-to-list 'eglot-server-programs '((c++-mode c++-ts-mode) . ("clangd")))
   :hook
-  ((c++-mode c++-ts-mode) . eglot-ensure))
+  ((c++-mode c++-ts-mode) . lsp-deferred)
+  :config
+  (setq lsp-clients-clang-args '("--compile-commands-dir=./_build/host-clang")))
 
 (use-package c-mode
   :straight nil
   :init
   (setq c-default-style "linux"
         c-basic-offset 4)
-  :custom
-  (add-to-list 'eglot-server-programs '((c-mode c-ts-mode) . ("clangd")))
   :hook
-  ((c-mode c-ts-mode) . eglot-ensure))
+  ((c-mode c-ts-mode) . lsp-deferred)
+  :config
+  (setq lsp-clients-clang-args '("--compile-commands-dir=./_build/host-clang")))
 
 
 
