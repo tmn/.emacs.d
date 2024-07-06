@@ -593,7 +593,8 @@
     (push directories lsp-file-watch-ignored))
   :hook ((lsp-completion-mode . t/lsp-mode-setup-completion)
          ((java-mode
-           python-mode) . lsp-deferred)
+           python-mode
+           python-ts-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration)))
 
 
@@ -704,7 +705,7 @@
 ;; Python
 ;; -----------------------------------------------------------------------------
 (use-package python-mode
-  :hook (python-mode . lsp-deferred)
+  :hook ((python-mode python-ts-mode) . lsp-deferred)
   :custom
   (python-shell-interpreter "python3")
   (dap-python-debugger 'debugpy)
@@ -715,16 +716,15 @@
   :config
   (pyvenv-mode 1))
 
+(use-package transient)
+
 (use-package lsp-pyright
-  :config
-  (defun t/python-mode ()
-    (interactive)
-    (require 'lsp-pyright)
-    (lsp-deferred))
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (require 'ruff-lsp)
+                         (lsp-deferred))))
 
-  (add-hook 'python-mode-hook 't/python-mode))
-
-
+(use-package poetry)
 
 
 ;; -----------------------------------------------------------------------------
