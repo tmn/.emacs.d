@@ -719,9 +719,9 @@
 (use-package transient)
 
 (use-package lsp-pyright
-  :hook (python-mode . (lambda ()
+  :hook ((python-mode python-ts-mode) . (lambda ()
                          (require 'lsp-pyright)
-                         (require 'ruff-lsp)
+                         ;; (require 'ruff-lsp)
                          (lsp-deferred))))
 
 (use-package poetry)
@@ -961,7 +961,7 @@
          ("C-x C-b" . consult-buffer)
          ("C-s" . consult-line)
          ("C-M-l" . consult-imenu)
-         ("C-c p s" . consult-ripgrep)
+         ("C-c s" . consult-ripgrep)
          :map minibuffer-local-map
          ("C-h" . consult-history))
 
