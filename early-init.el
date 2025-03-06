@@ -1,10 +1,8 @@
 ;;; early-init.el --- Initial config load -*- lexical-binding: t -*-
-
 ;;; Commentary:
 ;; Early initial file.
 
 ;;; Code:
-
 
 ;; Reduce GC frequency
 (let ((normal-gc-cons-threshold (* 64 1024 1024))
@@ -24,30 +22,63 @@
 ;; Silence compiler warnings
 (setq native-comp-async-report-warnings-errors nil)
 
+;; -----------------------------------------------------------------------------
+;; package.el
+;; -----------------------------------------------------------------------------
 
-;;; Bootstrap straight.el
-(setq straight-repository-branch "develop")
-(defvar bootstrap-version)
+(require 'package)
 
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-  
-(setq package-enable-at-startup nil)
-(setq straight-use-package-by-default t)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives
+             '("gnu" . "https://elpa.gnu.org/packages/") t)
 
-(straight-use-package 'use-package)
 
-(let ((my-gnutls-min-prime-bits 4096))
-  (setq gnutls-min-prime-bits my-gnutls-min-prime-bits))
+(package-initialize)
+
+(unless package-archive-contents
+  (package-refresh-contents))
+
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(unless (package-installed-p 'vc-use-package)
+  (package-vc-install "https://github.com/slotThe/vc-use-package"))
+(require 'vc-use-package)
+
+
+;; -----------------------------------------------------------------------------
+;; use-package
+;; -----------------------------------------------------------------------------
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+
+
+;; -----------------------------------------------------------------------------
+;; vc-use-package
+;; -----------------------------------------------------------------------------
+
+(unless (package-installed-p 'vc-use-package)
+  (package-vc-install "https://github.com/slotThe/vc-use-package"))
+
+(require 'vc-use-package)
 
 
 ;;; early-init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-vc-selected-packages
+   '((vc-use-package :vc-backend Git :url
+		     "https://github.com/slotThe/vc-use-package"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

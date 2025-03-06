@@ -47,13 +47,13 @@
           (load (expand-file-name "osx.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
 
       (when (eq system-type 'windows-nt)
-        (let ((t/lib-file (concat user-emacs-directory "osx.el")))
+        (let ((t/lib-file (concat user-emacs-directory "windows.el")))
           (unless (file-exists-p t/lib-file)
             (error "No file found: %s" t/lib-file))
           (load (expand-file-name "windows.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
 
       (when (eq system-type 'gnu/linux)
-        (let ((t/lib-file (concat user-emacs-directory "osx.el")))
+        (let ((t/lib-file (concat user-emacs-directory "linux.el")))
           (unless (file-exists-p t/lib-file)
             (error "No file found: %s" t/lib-file))
           (load (expand-file-name "linux.el" user-emacs-directory) nil 'nomessage 'nosuffix)))
@@ -74,3 +74,15 @@
         (load t/lib-file nil 'nomessage 'nosuffix))))))
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages '(doom-modeline magit ordresless use-package vertico)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
