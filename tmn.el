@@ -6,14 +6,6 @@
 
 ;;; Code:
 
-
-(use-package tramp
-  :ensure nil
-  :config
-  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
-
-
-
 ;; -----------------------------------------------------------------------------
 ;; Themes
 ;; -----------------------------------------------------------------------------
@@ -117,7 +109,7 @@
 
 (cond
  ((find-font (font-spec :family "Fira Code"))
-  (set-frame-font "Fira Code:pixelsize=13"))
+  (set-frame-font "Fira Code:pixelsize=16"))
  ((find-font (font-spec :family "SF Mono"))
   (set-frame-font "SF Mono:pixelsize=13"))
  ((find-font (font-spec :family "Fira Code Retina"))
@@ -129,36 +121,30 @@
 
 
 ;; -----------------------------------------------------------------------------
-;; Tree-sitter
-;; -----------------------------------------------------------------------------
-
-;; (setq treesit-language-source-alist
-;;    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-;;      (c "https://github.com/tree-sitter/tree-sitter-c")
-;;      (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-;;      (cmake "https://github.com/uyha/tree-sitter-cmake")
-;;      (css "https://github.com/tree-sitter/tree-sitter-css")
-;;      (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-;;      (go "https://github.com/tree-sitter/tree-sitter-go")
-;;      (html "https://github.com/tree-sitter/tree-sitter-html")
-;;      (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-;;      (json "https://github.com/tree-sitter/tree-sitter-json")
-;;      (make "https://github.com/alemuller/tree-sitter-make")
-;;      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-;;      (python "https://github.com/tree-sitter/tree-sitter-python")
-;;      (toml "https://github.com/tree-sitter/tree-sitter-toml")
-;;      (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-;;      (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-;;      (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
-
-
-;; -----------------------------------------------------------------------------
 ;; Basic packages
 ;; -----------------------------------------------------------------------------
 
-(use-package diminish)
-
 (use-package rg)
+(use-package s)
+(use-package transient)
+
+(use-package tramp
+  :ensure nil
+  :config
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
+(use-package elec-pair
+  :ensure nil
+  :config
+  (electric-pair-mode 1))
+
+(use-package move-text
+  :config
+  (move-text-default-bindings))
+
+(use-package direnv
+  :config
+  (direnv-mode))
 
 ;; Trim spaces from end of line on save
 (use-package ws-butler
@@ -172,7 +158,7 @@
 ;; -----------------------------------------------------------------------------
 
 (use-package doom-modeline
-   :init (doom-modeline-mode 1)
+  :init (doom-modeline-mode 1)
   :config
   (setq doom-modeline-height 28
         doom-modeline-bar-width 4
@@ -226,97 +212,6 @@
 
 
 ;; -----------------------------------------------------------------------------
-;; LSP-mode
-;; -----------------------------------------------------------------------------
-
-;; (use-package treesit
-;;   :ensure nil
-;;   ; :hook (prog-mode . (lambda () (when (treesit-available-p) (treesit-mode))))
-;;   :preface
-;;   (defun t/setup-grammars ()
-;;     ""
-;;     (interactive)
-;;     (dolist (grammar '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-;;                 (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-;;                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
-;;                 (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-;;                 (c . ("https://github.com/tree-sitter/tree-sitter-c" "v0.20.8"))
-;;                 (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.3"))
-;;                 (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-;;                 (toml "https://github.com/tree-sitter/tree-sitter-toml")
-;;                 (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
-;;                 (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-;;                 (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
-;;       (add-to-list 'treesit-language-source-alist grammar)
-;;       (unless (treesit-language-available-p (car grammar))
-;;         (treesit-install-language-grammar (car grammar)))))
-
-;;   (dolist (mapping '((python-mode . python-ts-mode)
-;;                      (json-mode . json-ts-mode)
-;;                      (bash-mode . bash-ts-mode)
-;;                      (js2-mode . js2-ts-mode)
-;;                      (c++-mode . c++-ts-mode)
-;;                      (c-mode . c-ts-mode)))
-;;     (add-to-list 'major-mode-remap-alist mapping))
-
-;;   :config
-;;   (t/setup-grammars))
-
-  ;; :hook (
-  ;;        (prog-mode . tree-sitter-mode)
-  ;;        (prog-mode . turn-on-tree-sitter-mode)
-  ;;        (tree-sitter-after-on . tree-sitter-hl-mode)
-  ;;        ))
-
-;; (add-hook 'prog-mode-hook #'tree-sitter-mode)
-;; (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-
-;; (use-package js
-;;   :ensure nil
-;;   :hook ((js-mode . lsp)
-;;          (js-ts-mode . lsp)
-;;          (javascript-mode . lsp)
-;;          (typescript-tsx-mode . lsp))
-;;   :config
-;;   (setq js-indent-level 2)
-;;   :custom
-;;   (js-ts-mode-indent-offset 2))
-
-
-
-;; -----------------------------------------------------------------------------
-;; C / C++
-;; -----------------------------------------------------------------------------
-
-
-(use-package c-mode
-  :ensure nil
-  :hook ((c-mode c-ts-mode) . eglot-ensure))
-
-;;   :custom
-;;   (c-ts-mode-indent-offset 4))
-
-(use-package c++-mode
-  :ensure nil
-  :hook ((c++-mode c++-ts-mode) . eglot-ensure))
-
-;;   :custom
-;;   (c-ts-mode-indent-offset 4))
-
-
-
-(setq c-default-style "linux")
-(setq c-basic-offset 4)
-
-;; -----------------------------------------------------------------------------
-;; JavaScript / TypeScript / Web
-;; -----------------------------------------------------------------------------
-
-
-;; (use-package js-mode
-;;   :ensure nil)
-
-;; -----------------------------------------------------------------------------
 ;; Flymake
 ;; -----------------------------------------------------------------------------
 
@@ -325,9 +220,9 @@
   :hook (prog-mode . flymake-mode))
 
 (use-package flymake-ruff
+  :after flymake-mode
   :ensure t
   :hook (eglot-managed-mode . flymake-ruff-load))
-
 
 ;; -----------------------------------------------------------------------------
 ;; Eglot
@@ -335,38 +230,60 @@
 
 (use-package eglot
   :ensure nil
-  :hook ((ptyhon-mode
-          python-ts-mode) . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
+  (setq eglot-python-extra-paths '(".venv/lib/python3.12/site-packages")))
 
 
 ;; -----------------------------------------------------------------------------
 ;; Python
 ;; -----------------------------------------------------------------------------
 
-(use-package python-mode
+(use-package python
+  :ensure nil
   :custom
-  (python-shell-interpreter "python3"))
+  (python-shell-interpreter "python3")
+  (python-indent-offset 4)
+  :hook
+  (python-mode . eglot-ensure))
 
-(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+(use-package python-pytest)
 
 (use-package ruff-format
   :vc (:fetcher github :repo "tmn/emacs-ruff-format")
-  :hook (((python-mode python-ts-mode) . ruff-format-on-save-mode)
-         ((python-mode python-ts-mode) . ruff-fix-imports-on-save-mode)))
+  :hook ((python-mode . ruff-format-on-save-mode)
+         (python-mode . ruff-fix-imports-on-save-mode)))
+
+;; (use-package pyvenv
+;;   :config
+;;   (pyvenv-mode t)
+
+;;   (setq pyvenv-post-activate-hooks
+;;         (list (lambda ()
+;;                 (setq python-shell-interpreter (concat pyvenv-virtual-env ".venv/bin/python3")))))
+;;   (setq pyvenv-post-deactivate-hooks
+;;         (list (lambda ()
+;;                 (setq python-shell-interpreter "python3")))))
 
 
-(use-package pyvenv
+;; -----------------------------------------------------------------------------
+;; C / C++
+;; -----------------------------------------------------------------------------
+
+(use-package c-mode
+  :ensure nil
+  :hook ((c-mode c-ts-mode) . eglot-ensure)
   :config
-  (pyvenv-mode t)
+  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode)))
 
-  (setq pyvenv-post-activate-hooks
-        (list (lambda ()
-                (setq python-shell-interpreter (concat pyvenv-virtual-env ".venv/bin/python3")))))
-  (setq pyvenv-post-deactivate-hooks
-        (list (lambda ()
-                (setq python-shell-interpreter "python3")))))
+(use-package c++-mode
+  :ensure nil
+  :hook ((c++-mode c++-ts-mode) . eglot-ensure)
+  :config
+  (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode)))
 
-(use-package transient)
+(setq c-default-style "linux")
+(setq c-basic-offset 4)
 
 
 ;; -----------------------------------------------------------------------------
@@ -467,7 +384,7 @@
 ;; -----------------------------------------------------------------------------
 
 (use-package yasnippet
-  :hook ((python-mode python-ts-mode) . yas-minor-mode)
+  :hook ((python-mode) . yas-minor-mode)
   :init
   (yas-global-mode)
   :config
@@ -569,13 +486,12 @@
   :config
   (setq tab-width 4
         qml-indent-width 4))
-(use-package yaml-mode)
 
+(use-package yaml-mode)
 (use-package cmake-mode)
 (use-package restclient)
 (use-package vterm)
 (use-package multi-vterm)
-(use-package jsonnet-mode)
 (use-package ansi-color)
 (use-package logview
   :mode "\\.\\(log\\)$")
