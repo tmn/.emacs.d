@@ -207,7 +207,6 @@
   :init
   (winum-mode)
   :bind (("C-x w `" . winum-select-window-by-number)
-         ("M-0" . treemacs-select-window)
          ("M-1" . winum-select-window-1)
          ("M-2" . winum-select-window-2)
          ("M-3" . winum-select-window-3)
@@ -514,16 +513,6 @@
 (use-package nerd-icons-completion
   :config
   (nerd-icons-completion-mode))
-
-
-;; -----------------------------------------------------------------------------
-;; Treemacs
-;; -----------------------------------------------------------------------------
-
-(use-package treemacs
-  :bind (("C-c o p" . treemacs))
-  :config
-  (treemacs-git-mode 'deferred))
 
 
 ;; -----------------------------------------------------------------------------
