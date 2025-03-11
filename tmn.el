@@ -74,7 +74,7 @@
 (setq header-line-format nil)
 
 ;; Supress some defaults
-(setq inhibit-startup-screen t)
+(setq inhibit-startup-screen nil)
 
 ;; Disable scrollbars
 (add-to-list 'default-frame-alist
@@ -98,14 +98,6 @@
 ;; -----------------------------------------------------------------------------
 ;; Configure fonts
 ;; -----------------------------------------------------------------------------
-
-
-;; Set reusable font name variables
-(defvar t/fixed-width-font "Fira Code"
-  "The font to use for monospaced (fixed width) text.")
-
-(defvar t/variable-width-font "Iosevka Aile"
-  "The font to use for variable-pitch (document) text.")
 
 (cond
  ((find-font (font-spec :family "Fira Code"))
@@ -435,6 +427,7 @@
 ;;; Other tools
 
 (use-package css-mode
+  :ensure nil
   :mode "\\.css$"
   :config
   (add-hook 'css-mode-hook (lambda ()
@@ -461,6 +454,7 @@
   :mode "\\(json\\|jshintrc\\|eslintrc\\)$")
 
 (use-package json-reformat
+  :after (json-mode)
   :commands json-reformat
   :init (setq json-reformat:indent-width 4))
 
@@ -471,6 +465,7 @@
   :mode "\\.mustache$")
 
 (use-package rst
+  :ensure nil
   :mode (("\\.txt$" . rst-mode)
          ("\\.rst$" . rst-mode)
          ("\\.rest$" . rst-mode)))
@@ -483,11 +478,12 @@
 
 (use-package yaml-mode)
 (use-package cmake-mode)
-(use-package restclient)
 
 (use-package ansi-color)
 (use-package logview
   :mode "\\.\\(log\\)$")
+
+(use-package restclient)
 
 (use-package vterm)
 (use-package multi-vterm)
