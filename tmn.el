@@ -232,6 +232,7 @@
   :ensure nil
   :config
   (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
   (setq eglot-python-extra-paths '(".venv/lib/python3.12/site-packages")))
 
 
@@ -245,25 +246,16 @@
   (python-shell-interpreter "python3")
   (python-indent-offset 4)
   :hook
-  (python-mode . eglot-ensure))
+  ((python-mode python-ts-mode) . eglot-ensure)
+  :config
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 (use-package python-pytest)
 
 (use-package ruff-format
   :vc (:fetcher github :repo "tmn/emacs-ruff-format")
-  :hook ((python-mode . ruff-format-on-save-mode)
-         (python-mode . ruff-fix-imports-on-save-mode)))
-
-;; (use-package pyvenv
-;;   :config
-;;   (pyvenv-mode t)
-
-;;   (setq pyvenv-post-activate-hooks
-;;         (list (lambda ()
-;;                 (setq python-shell-interpreter (concat pyvenv-virtual-env ".venv/bin/python3")))))
-;;   (setq pyvenv-post-deactivate-hooks
-;;         (list (lambda ()
-;;                 (setq python-shell-interpreter "python3")))))
+  :hook (((python-mode python-ts-mode) . ruff-format-on-save-mode)
+         ((python-mode python-ts-mode) . ruff-fix-imports-on-save-mode)))
 
 
 ;; -----------------------------------------------------------------------------
@@ -296,7 +288,7 @@
   :custom
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 0.1)
+  (corfu-auto-delay 0.2)
   :bind (:map corfu-map
               ("TAB" . corfu-next)
               ([tab] . corfu-next)
@@ -375,6 +367,7 @@
   (projectile-completion-system 'auto))
 
 (use-package consult-projectile
+  :after (consult projectile)
   :bind (:map projectile-command-map)
   ("f" . consult-projectile-find-file))
 
@@ -384,7 +377,8 @@
 ;; -----------------------------------------------------------------------------
 
 (use-package yasnippet
-  :hook ((python-mode) . yas-minor-mode)
+  :hook ((python-mode
+          python-ts-mode) . yas-minor-mode)
   :init
   (yas-global-mode)
   :config
@@ -490,11 +484,13 @@
 (use-package yaml-mode)
 (use-package cmake-mode)
 (use-package restclient)
-(use-package vterm)
-(use-package multi-vterm)
+
 (use-package ansi-color)
 (use-package logview
   :mode "\\.\\(log\\)$")
+
+(use-package vterm)
+(use-package multi-vterm)
 
 (defun display-ansi-colors ()
   (interactive)
