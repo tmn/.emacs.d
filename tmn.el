@@ -136,7 +136,7 @@
 (use-package elec-pair
   :ensure nil
   :config
-  (electric-pair-mode 1))
+  (electric-pair-mode 0))
 
 (use-package move-text
   :config
