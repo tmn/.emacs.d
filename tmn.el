@@ -313,8 +313,9 @@
   :hook (prog-mode . completion-preview-mode)
   :bind
   (:map completion-preview-active-mode-map
-    ("M-n" . completion-preview-next-candidate)
-    ("M-p" . completion-preview-prev-candidate))
+        ("M-i" . completion-preview-insert)
+        ("M-n" . completion-preview-next-candidate)
+        ("M-p" . completion-preview-prev-candidate))
   :config
   (setq completion-preview-minimum-symbol-length 2))
 
@@ -498,7 +499,8 @@
         qml-indent-width 4))
 
 (use-package yaml-mode)
-(use-package cmake-mode)
+(use-package cmake-mode
+  :mode "CMakeLists.txt")
 
 (use-package ansi-color)
 (use-package logview
@@ -506,14 +508,15 @@
 
 (use-package restclient)
 
-(use-package vterm)
-(use-package multi-vterm)
+(use-package eat
+  :config
+  (setq eat-enable-yank-to-terminal t
+        eat-enable-kill-from-terminal t))
 
 (defun display-ansi-colors ()
   (interactive)
   (ansi-color-apply-on-region (point-min) (point-max)))
 
 (add-to-list 'auto-mode-alist '("\\.log\\'" . display-ansi-colors))
-
 
 ;;; tmn.el ends here
