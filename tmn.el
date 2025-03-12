@@ -280,20 +280,34 @@
 
 
 ;; -----------------------------------------------------------------------------
-;; Stuff
+;; Dired stuff
 ;; -----------------------------------------------------------------------------
 
 (use-package dash)
 
 (use-package dired
-  :ensure nil)
+  :ensure nil
+  :hook (dired-mode . dired-hide-details-mode))
 
 (use-package dired-hacks-utils
+  :after dired)
+
+(use-package dired-subtree
+  :after (dired dired-hacks-utils)
   :bind (:map dired-mode-map
               ("i" . dired-subtree-insert)
-              (";" . dired-subtree-remove))
-  :config
-  (use-package dired-subtree))
+              (";" . dired-subtree-remove)
+              ("TAB" . dired-subtree-toggle)))
+
+(use-package dired-git-info
+  :after (dired dired-hacks-utils)
+  :bind (:map dired-mode-map
+              (")" . dired-git-info-mode)))
+
+
+;; -----------------------------------------------------------------------------
+;; Stuff
+;; -----------------------------------------------------------------------------
 
 (use-package corfu
   :init
