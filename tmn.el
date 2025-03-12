@@ -283,6 +283,18 @@
 ;; Stuff
 ;; -----------------------------------------------------------------------------
 
+(use-package dash)
+
+(use-package dired
+  :ensure nil)
+
+(use-package dired-hacks-utils
+  :bind (:map dired-mode-map
+              ("i" . dired-subtree-insert)
+              (";" . dired-subtree-remove))
+  :config
+  (use-package dired-subtree))
+
 (use-package corfu
   :init
   (global-corfu-mode)
