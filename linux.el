@@ -5,6 +5,9 @@
 
 ;;; Code:
 
+(use-package exec-path-from-shell
+  :init (exec-path-from-shell-initialize))
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 

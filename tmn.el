@@ -7,66 +7,6 @@
 ;;; Code:
 
 ;; -----------------------------------------------------------------------------
-;; Themes
-;; -----------------------------------------------------------------------------
-
-(use-package doom-themes
-  :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t
-        doom-themes-padded-modeline nil)
-
-  (load-theme 'doom-one t)
-
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config))
-
-
-;; -----------------------------------------------------------------------------
-;; Some basic configs
-;; -----------------------------------------------------------------------------
-
-(setq-default
- auto-save-default nil
- create-lockfiles nil
- indent-tabs-mode nil
- tab-width 2
- make-backup-files nil
- tab-always-indent 'complete)
-
-(column-number-mode t)
-(global-hl-line-mode 1)
-(global-auto-revert-mode 1)
-
-(save-place-mode 1)
-(setq use-dialog-box nil)
-
-(defun t/my-prog-mode ()
-  "Default values for my prog mode."
-  (display-line-numbers-mode 0)
-  (set-fringe-mode 15))
-
-(add-hook 'prog-mode-hook 't/my-prog-mode)
-
-
-;; -----------------------------------------------------------------------------
-;; Confirm exit emacs
-;; -----------------------------------------------------------------------------
-
-(add-hook 'kill-emacs-query-functions
-          (lambda () (y-or-n-p "Dumme ape! Quitting already??? "))
-          'append)
-
-
-;; -----------------------------------------------------------------------------
-;; Custom file
-;; -----------------------------------------------------------------------------
-
-(setq custom-file (locate-user-emacs-file "custom-vars.el"))
-(load custom-file 'noerror 'nomessage)
-
-
-;; -----------------------------------------------------------------------------
 ;; Modify some GUI features
 ;; -----------------------------------------------------------------------------
 
@@ -86,12 +26,6 @@
 (tooltip-mode -1)
 
 (setq visible-bell t)
-
-;; (set-frame-parameter (selected-frame) 'alpha '(98 . 98))
-;; (add-to-list 'default-frame-alist '(alpha . (98 . 98)))
-;; (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-;; (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
 (setq vc-follow-symlinks t)
 
 
@@ -100,16 +34,51 @@
 ;; -----------------------------------------------------------------------------
 
 (cond
- ((find-font (font-spec :family "Fira Code"))
-  (set-frame-font "Fira Code:pixelsize=16"))
  ((find-font (font-spec :family "SF Mono"))
-  (set-frame-font "SF Mono:pixelsize=13"))
+  (set-frame-font "SF Mono:pixelsize=18"))
+ ((find-font (font-spec :family "Cascadia Code"))
+  (set-frame-font "Cascadia Code:pixelsize=20"))
+ ((find-font (font-spec :family "Fira Code"))
+  (set-frame-font "Fira Code:pixelsize=18"))
  ((find-font (font-spec :family "Fira Code Retina"))
   (set-frame-font "Fira Code Retina:pixelsize=12"))
  ((find-font (font-spec :family "Menlo"))
   (set-frame-font "Menlo:pixelsize=12"))
  ((find-font (font-spec :family "Monaco"))
   (set-frame-font "Monaco:pixelsize=12")))
+
+
+;; -----------------------------------------------------------------------------
+;; Themes
+;; -----------------------------------------------------------------------------
+
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t
+        doom-themes-padded-modeline nil)
+
+  (load-theme 'doom-one t)
+
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 28
+        doom-modeline-bar-width 4
+        doom-modeline-hud nil
+        doom-modeline-lsp t
+        doom-modeline-icon t
+        doom-modeline-major-mode-icon t
+        doom-modeline-major-mode-color-icon t
+        doom-modeline-buffer-state-icon t
+        doom-modeline-buffer-file-name-style 'file-name
+        doom-modeline-minor-modes nil
+        doom-modeline-buffer-encoding nil
+        doom-modeline-indent-info nil
+        doom-modeline-env-version t))
 
 
 ;; -----------------------------------------------------------------------------
@@ -144,28 +113,9 @@
          (prog-mode . ws-butler-mode)))
 
 
-
 ;; -----------------------------------------------------------------------------
 ;; Other packages
 ;; -----------------------------------------------------------------------------
-
-(use-package doom-modeline
-  :init (doom-modeline-mode 1)
-  :config
-  (setq doom-modeline-height 28
-        doom-modeline-bar-width 4
-        doom-modeline-hud nil
-        doom-modeline-lsp t
-        doom-modeline-icon t
-        doom-modeline-major-mode-icon t
-        doom-modeline-major-mode-color-icon t
-        doom-modeline-buffer-state-icon t
-        doom-modeline-buffer-file-name-style 'file-name
-        doom-modeline-minor-modes nil
-        doom-modeline-buffer-encoding nil
-        doom-modeline-indent-info nil
-        doom-modeline-env-version t))
-
 
 (use-package which-key
   :ensure nil
@@ -209,12 +159,20 @@
 
 (use-package flymake-mode
   :ensure nil
-  :hook (prog-mode . flymake-mode))
+  :hook (prog-mode . flymake-mode)
+)
+
+
+;; (require 'flymake-ruff)
+;; (add-hook 'python-mode-hook #'flymake-ruff-load)
+;; (add-hook 'python-ts-mode-hook #'flymake-ruff-load)
+;; (add-hook 'eglot-managed-mode-hook #'flymake-ruff-load)
+;; (setq flymake-log-level 'info)
 
 (use-package flymake-ruff
-  :after flymake-mode
-  :ensure t
-  :hook (eglot-managed-mode . flymake-ruff-load))
+  :hook (((eglot-managed-mode python-mode python-ts-mode) . flymake-ruff-load))
+  :init
+  (setq flymake-log-level 'info))
 
 ;; -----------------------------------------------------------------------------
 ;; Eglot
@@ -222,9 +180,10 @@
 
 (use-package eglot
   :ensure nil
+  :bind ("M-RET" . eglot-code-actions)
   :config
-  (add-to-list 'eglot-server-programs '(python-mode . ("pyright-langserver" "--stdio")))
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("pyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-mode . ("basedpyright-langserver" "--stdio")))
+  (add-to-list 'eglot-server-programs '(python-ts-mode . ("basedpyright-langserver" "--stdio")))
   (setq eglot-python-extra-paths '(".venv/lib/python3.12/site-packages")))
 
 
@@ -312,15 +271,14 @@
 (use-package corfu
   :init
   (global-corfu-mode)
-  :custom
-  (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-auto-delay 0.2)
-  :bind (:map corfu-map
-              ("TAB" . corfu-next)
-              ([tab] . corfu-next)
-              ("S-TAB" . corfu-previous)
-              ([backtab] . corfu-previous)))
+  :config
+
+  (setq corfu-min-width 40
+        corfu-preview-current nil
+        corfu-auto t
+        corfu-auto-delay 0.2
+        corfu-popupinfo-delay '(0.5 . 0.3))
+  (corfu-popupinfo-mode 1))
 
 (use-package completion-preview
   :ensure nil
@@ -336,7 +294,6 @@
 (use-package orderless
   :custom
   (completion-category-defaults nil)
-
   (completion-style '(orderless flex))
   (completion-category-overrides '((file (styles  . (orderless flex)))))
 
@@ -366,9 +323,6 @@
 (use-package marginalia
   :bind (:map minibuffer-local-map
               ("M-A" . marginalia-cycle))
-  :custom
-  (marginalia-max-relative-age 0)
-  (marginalia-align 'right)
   :init
   (marginalia-mode))
 
@@ -532,5 +486,12 @@
   (ansi-color-apply-on-region (point-min) (point-max)))
 
 (add-to-list 'auto-mode-alist '("\\.log\\'" . display-ansi-colors))
+
+
+;; -----------------------------------------------------------------------------
+;; AI Stuff
+;; -----------------------------------------------------------------------------
+(use-package gptel
+  :bind ("C-c o g" . gptel))
 
 ;;; tmn.el ends here
