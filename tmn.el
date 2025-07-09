@@ -4,6 +4,8 @@
 
 (add-to-list 'load-path (concat user-emacs-directory (convert-standard-filename "site-lisp/")))
 
+
+
 ;;; Code:
 
 ;; -----------------------------------------------------------------------------
@@ -47,6 +49,23 @@
  ((find-font (font-spec :family "Monaco"))
   (set-frame-font "Monaco:pixelsize=12")))
 
+
+;; -----------------------------------------------------------------------------
+;; Keymaps
+;; -----------------------------------------------------------------------------
+
+
+(defvar tmn-keymaps
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C->") 'end-of-buffer)
+    (define-key map (kbd "C-<") 'beginning-of-buffer)
+    map)
+  "My keymaps.")
+
+(global-set-key (kbd "C->") 'end-of-buffer)
+(global-set-key (kbd "C-<") 'beginning-of-buffer)
+
+;; (define-key (current-global-map)
 
 ;; -----------------------------------------------------------------------------
 ;; Themes
@@ -163,28 +182,134 @@
 )
 
 
-;; (require 'flymake-ruff)
-;; (add-hook 'python-mode-hook #'flymake-ruff-load)
-;; (add-hook 'python-ts-mode-hook #'flymake-ruff-load)
-;; (add-hook 'eglot-managed-mode-hook #'flymake-ruff-load)
-;; (setq flymake-log-level 'info)
-
 (use-package flymake-ruff
-  :hook (((eglot-managed-mode python-mode python-ts-mode) . flymake-ruff-load))
+  :hook (((python-mode python-ts-mode) . flymake-ruff-load))
   :init
   (setq flymake-log-level 'info))
 
+
 ;; -----------------------------------------------------------------------------
-;; Eglot
+;; C / C++
 ;; -----------------------------------------------------------------------------
 
-(use-package eglot
-  :ensure nil
-  :bind ("M-RET" . eglot-code-actions)
+;; (use-package c-mode
+;;   :ensure nil
+;;   ;; :hook ((c-mode c-ts-mode) . eglot-ensure)
+;;   :config
+;;   (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode)))
+
+;; (use-package c++-mode
+;;   :ensure nil
+;;   ;; :hook ((c++-mode c++-ts-mode) . eglot-ensure)
+;;   :config
+;;   (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode)))
+
+(setq c-default-style "linux")
+(setq c-basic-offset 4)
+
+
+;; -----------------------------------------------------------------------------
+;; LSP
+;; -----------------------------------------------------------------------------
+
+
+;; Company mode (completion)
+(use-package company
+    :ensure t
+    ;; :config
+    ;; (global-company-mode +1)
+    )
+
+(use-package spinner
+  :vc (:fetcher github :repo "Malabarba/spinner.el"))
+
+;; Used to interface with swift-lsp.
+(use-package lsp-mode
+  :after spinner
+  :commands lsp
+  :bind (("M-RET" . lsp-execute-code-action)
+         ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+         ([remap xref-find-references] . lsp-ui-peek-find-references))
+  :custom
+  (lsp-print-io nil)
+  (lsp-auto-configure t)
+  (lsp-enable-snippet t)
+  ; (lsp-completion-provider :none)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-idle-delay 0.5)
+  (lsp-eldoc-render-all t)
+
+  :init
+  (setq lsp-keymap-prefix "C-c C-l")
+
+  :hook ((lsp-mode . (lambda () (corfu-mode -1) (company-mode 1)))
+         ((swift-mode
+           python-mode python-ts-mode
+           c-mode
+           c++-mode) . lsp))
+
   :config
-  (add-to-list 'eglot-server-programs '(python-mode . ("basedpyright-langserver" "--stdio")))
-  (add-to-list 'eglot-server-programs '(python-ts-mode . ("basedpyright-langserver" "--stdio")))
-  (setq eglot-python-extra-paths '(".venv/lib/python3.12/site-packages")))
+  (setq lsp-file-watch-threshold 10000)
+  (dolist (directories '("[/\\\\].data\\'"
+                         "[/\\\\].github\\'"
+                         "[/\\\\].streamlit\\'"
+                         "[/\\\\].vscode\\'"
+                         "[/\\\\]gradle\\'"
+                         "[/\\\\]_testlogs\\'"
+                         "[/\\\\]dist\\'"
+                         "[/\\\\].gradle\\'"
+                         "[/\\\\].storybook\\'"
+                         "[/\\\\].log\\'"
+                         "[/\\\\]eclipse.jdt.ls\\'"
+                         "[/\\\\]build\\'"
+                         "[/\\\\]_build\\'"
+                         "[/\\\\]coverage\\'"
+                         "[/\\\\].DS_Store"))
+    (push directories lsp-file-watch-ignored)
+    (push directories lsp-file-watch-ignored-directories)))
+
+
+;; lsp-mode's UI modules
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :hook (lsp-mode . lsp-ui-mode)
+  :config
+  (setq lsp-ui-doc-enable t
+        lsp-ui-peek-enable t
+        lsp-ui-doc-header t
+        lsp-ui-imenu-auto-refresh t
+        lsp-ui-peek-always-show t)
+
+  (progn
+    (define-key lsp-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+    (define-key lsp-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)))
+
+
+;; sourcekit-lsp support
+(defun find-sourcekit-lsp ()
+  (or (executable-find "sourcekit-lsp")
+      (and (eq system-type 'darwin)
+           (string-trim (shell-command-to-string "xcrun -f sourcekit-lsp")))
+      "~/.local/share/swiftly/bin/sourcekit-lsp"))
+
+(use-package lsp-sourcekit
+    :ensure t
+    :after lsp-mode
+    :custom
+    (lsp-sourcekit-executable (find-sourcekit-lsp) "Find sourcekit-lsp"))
+
+
+;; -----------------------------------------------------------------------------
+;; Swift
+;; -----------------------------------------------------------------------------
+
+
+
+(use-package swift-mode
+  :mode "\\.swift\\'"
+  :interpreter "swift")
+
+
 
 
 ;; -----------------------------------------------------------------------------
@@ -193,15 +318,26 @@
 
 (use-package python
   :ensure nil
+  :bind (:map python-mode-map
+              ("C-c C-o" . python-shell-send-file)
+         :map python-ts-mode-map
+              ("C-c C-o" . python-shell-send-file))
   :custom
   (python-shell-interpreter "python3")
   (python-indent-offset 4)
-  :hook
-  ((python-mode python-ts-mode) . eglot-ensure)
+  ;; :hook
+  ;; ((python-mode python-ts-mode) . eglot-ensure)
   :config
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 (use-package python-pytest)
+
+(use-package lsp-pyright
+  :ensure t
+  :custom (lsp-pyright-langserver-command "basedpyright") ;; or basedpyright
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
 
 (use-package ruff-format
   :vc (:fetcher github :repo "tmn/emacs-ruff-format")
@@ -214,28 +350,11 @@
 ;; -----------------------------------------------------------------------------
 
 (use-package rust-mode
-  :hook (rust-mode . eglot-ensure)
+  ;; :hook (rust-mode . eglot-ensure)
   :config
-  (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) . ("rust-analyzer" :initializationOptions (:check (:command "clippy"))))))
+  ;; (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) . ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+)
 
-;; -----------------------------------------------------------------------------
-;; C / C++
-;; -----------------------------------------------------------------------------
-
-(use-package c-mode
-  :ensure nil
-  :hook ((c-mode c-ts-mode) . eglot-ensure)
-  :config
-  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode)))
-
-(use-package c++-mode
-  :ensure nil
-  :hook ((c++-mode c++-ts-mode) . eglot-ensure)
-  :config
-  (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode)))
-
-(setq c-default-style "linux")
-(setq c-basic-offset 4)
 
 
 ;; -----------------------------------------------------------------------------
@@ -293,10 +412,9 @@
 
 (use-package orderless
   :custom
+  (completion-style '(orderless partial-completion basic))
   (completion-category-defaults nil)
-  (completion-style '(orderless flex))
-  (completion-category-overrides '((file (styles  . (orderless flex)))))
-
+  (completion-category-overrides nil)
   (orderless-component-separator 'orderless-escapable-split-on-space)
 
   (orderless-matching-styles
