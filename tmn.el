@@ -242,7 +242,10 @@
   :init
   (setq lsp-keymap-prefix "C-c C-l")
 
-  :hook ((lsp-mode . (lambda () (corfu-mode -1) (company-mode 1)))
+  :hook ((lsp-mode . (lambda ()
+                       (corfu-mode -1)
+                       (company-mode 1)
+                       (completion-preview-mode -1)))
          ((swift-mode
            python-mode python-ts-mode
            c-mode
